@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -c C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/admin_jar.txt -b C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/admin_jar.txt http://127.0.0.1:8123/admin/analytics/responses/6 -H 'Accept: application/json' -o C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/detail.json)",
+      "Bash(grep -o 'How likely are you.\\\\{0,20\\\\}\\\\|Great service, score [0-9]*\\\\|score 3' C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/detail.json)",
+      "Bash(curl -s -c C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/admin_jar.txt -b C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/admin_jar.txt http://127.0.0.1:8123/admin/analytics/reports?client_id=1 -H 'Accept: application/json' -o C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/reports.json)",
+      "Bash(curl -s -c C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/admin_jar.txt -b C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/admin_jar.txt http://127.0.0.1:8123/admin/analytics/export/csv?client_id=1 -o C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/export.csv -D C:/Users/Hp/AppData/Local/Temp/claude/d--Sumeet-Projects-Survyra/669b845d-630f-43c3-9011-b529cf80116a/scratchpad/export_headers.txt)"
+    ]
+  }
+}

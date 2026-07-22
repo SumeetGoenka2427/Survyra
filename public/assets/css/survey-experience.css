@@ -1,0 +1,423 @@
+/* ==========================================================================
+   Survey-taking experience — every question style variant lives here.
+   Reads --survey-* custom properties set per-page from the active theme
+   (see survey/_theme-vars.blade.php), so every style below reskins itself
+   automatically to whatever theme/colors/typography/radius is active.
+   ========================================================================== */
+
+.sq-label {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.25rem;
+    line-height: 1.35;
+}
+
+/* ---- Shared option primitives (radio/checkbox families) -------------------- */
+.sq-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.sq-options.sq-options-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.sq-option-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Buttons style (NPS/CSAT/CES/radio "buttons") ------------------------------ */
+.sq-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--survey-border, #dde2ea);
+    border-radius: var(--survey-btn-radius, 8px);
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    color: var(--survey-text, #1e293b);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.sq-btn:hover {
+    border-color: var(--survey-primary, #0d6efd);
+    transform: translateY(-1px);
+}
+
+.sq-option-input:checked + .sq-btn {
+    background: var(--survey-primary, #0d6efd);
+    border-color: var(--survey-primary, #0d6efd);
+    color: #fff;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--survey-primary, #0d6efd) 35%, transparent);
+}
+
+/* Cards style (radio/checkbox "cards") --------------------------------------- */
+.sq-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1.5px solid var(--survey-border, #dde2ea);
+    border-radius: var(--survey-radius, 12px);
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+}
+
+.sq-card:hover {
+    border-color: var(--survey-primary, #0d6efd);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.sq-card .sq-card-indicator {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--survey-border, #cbd5e1);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.sq-card.sq-card-radio .sq-card-indicator { border-radius: 50%; }
+.sq-card.sq-card-checkbox .sq-card-indicator { border-radius: 6px; }
+
+.sq-option-input:checked + .sq-card {
+    border-color: var(--survey-primary, #0d6efd);
+    background: color-mix(in srgb, var(--survey-primary, #0d6efd) 6%, #fff);
+}
+
+.sq-option-input:checked + .sq-card .sq-card-indicator {
+    border-color: var(--survey-primary, #0d6efd);
+    background: var(--survey-primary, #0d6efd);
+}
+
+.sq-option-input:checked + .sq-card .sq-card-indicator::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.sq-option-input:checked + .sq-card.sq-card-radio .sq-card-indicator::after { border-radius: 50%; }
+
+/* Pills style (radio/checkbox "pills") --------------------------------------- */
+.sq-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid var(--survey-border, #dde2ea);
+    border-radius: 999px;
+    padding: 0.5rem 1.15rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+}
+
+.sq-pill:hover { border-color: var(--survey-primary, #0d6efd); }
+
+.sq-option-input:checked + .sq-pill {
+    background: var(--survey-primary, #0d6efd);
+    border-color: var(--survey-primary, #0d6efd);
+    color: #fff;
+}
+
+/* ---- NPS variants ----------------------------------------------------------- */
+.sq-nps-row { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin-bottom: 0.75rem; }
+.sq-nps-row .sq-btn { min-width: 42px; }
+
+.sq-nps-circles .sq-btn { border-radius: 50%; width: 48px; height: 48px; padding: 0; }
+
+.sq-nps-gradient .sq-btn {
+    border: none;
+    color: #fff;
+    opacity: 0.85;
+}
+.sq-nps-gradient .sq-btn:hover { opacity: 1; transform: translateY(-2px); }
+.sq-option-input:checked + .sq-nps-gradient-btn {
+    opacity: 1;
+    transform: scale(1.12);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+}
+
+.sq-scale-labels { display: flex; justify-content: space-between; color: var(--survey-muted, #64748b); font-size: 0.85rem; }
+
+.sq-emoji-groups { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 1.3rem; }
+
+/* ---- Rating stars / hearts / numbers --------------------------------------- */
+.sq-star-row {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: 2.1rem;
+    margin-bottom: 0.5rem;
+}
+.sq-star-row .sq-star-label { color: var(--survey-border, #d8dee8); cursor: pointer; transition: color 0.1s ease, transform 0.1s ease; }
+.sq-star-row .sq-option-input:checked ~ .sq-star-label,
+.sq-star-row .sq-star-label:hover,
+.sq-star-row .sq-star-label:hover ~ .sq-star-label {
+    color: var(--survey-accent, #f59e0b);
+}
+
+.sq-heart-row { display: flex; flex-direction: row-reverse; justify-content: center; gap: 0.25rem; font-size: 2rem; margin-bottom: 0.5rem; }
+.sq-heart-row .sq-heart-label { color: var(--survey-border, #d8dee8); cursor: pointer; transition: color 0.1s ease; }
+.sq-heart-row .sq-option-input:checked ~ .sq-heart-label,
+.sq-heart-row .sq-heart-label:hover,
+.sq-heart-row .sq-heart-label:hover ~ .sq-heart-label {
+    color: #f43f5e;
+}
+
+.sq-badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 0.5rem; }
+.sq-badge { width: 44px; height: 44px; border-radius: var(--survey-radius, 10px); }
+
+/* ---- Emoji rating variants -------------------------------------------------- */
+.sq-emoji-row { display: flex; gap: 0.6rem; justify-content: center; margin-bottom: 0.5rem; }
+.sq-emoji-btn { font-size: 2rem; border: none; background: transparent; border-radius: 50%; padding: 0.35rem; transition: transform 0.15s ease; opacity: 0.55; }
+.sq-emoji-btn:hover { opacity: 0.85; transform: scale(1.1); }
+.sq-option-input:checked + .sq-emoji-btn { opacity: 1; transform: scale(1.25); }
+
+.sq-emoji-card { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; border: 1.5px solid var(--survey-border, #dde2ea); border-radius: var(--survey-radius, 12px); padding: 0.75rem 0.5rem; cursor: pointer; transition: all 0.15s ease; flex: 1; }
+.sq-emoji-card .emoji { font-size: 1.6rem; }
+.sq-emoji-card .label { font-size: 0.72rem; color: var(--survey-muted, #64748b); font-weight: 600; }
+.sq-emoji-card:hover { border-color: var(--survey-primary, #0d6efd); }
+.sq-option-input:checked + .sq-emoji-card { border-color: var(--survey-primary, #0d6efd); background: color-mix(in srgb, var(--survey-primary, #0d6efd) 6%, #fff); }
+
+/* ---- Yes/No toggle ----------------------------------------------------------- */
+.sq-toggle-wrap {
+    display: flex;
+    border: 1.5px solid var(--survey-border, #dde2ea);
+    border-radius: 999px;
+    overflow: hidden;
+    max-width: 320px;
+    margin: 0 auto 0.5rem;
+}
+.sq-toggle-half {
+    flex: 1;
+    text-align: center;
+    padding: 0.65rem 0;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--survey-muted, #64748b);
+}
+.sq-option-input:checked + .sq-toggle-half.sq-toggle-yes { background: var(--survey-primary, #0d6efd); color: #fff; }
+.sq-option-input:checked + .sq-toggle-half.sq-toggle-no { background: #f43f5e; color: #fff; }
+
+/* ---- Text inputs -------------------------------------------------------------- */
+.sq-input-modern {
+    width: 100%;
+    border: 1.5px solid var(--survey-border, #dde2ea);
+    border-radius: var(--survey-radius, 10px);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+}
+
+.sq-input-modern:focus {
+    outline: none;
+    border-color: var(--survey-primary, #0d6efd);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--survey-primary, #0d6efd) 15%, transparent);
+}
+
+textarea.sq-input-modern { resize: none; overflow: hidden; min-height: 100px; }
+
+.sq-floating { position: relative; }
+.sq-floating .sq-input-modern { padding-top: 1.5rem; padding-bottom: 0.5rem; }
+.sq-floating label {
+    position: absolute;
+    left: 1rem;
+    top: 0.85rem;
+    color: var(--survey-muted, #94a3b8);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all 0.15s ease;
+    transform-origin: left top;
+    background: #fff;
+    padding: 0 2px;
+}
+.sq-floating .sq-input-modern:focus ~ label,
+.sq-floating .sq-input-modern:not(:placeholder-shown) ~ label {
+    top: -0.55rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--survey-primary, #0d6efd);
+}
+
+/* ---- Card-based layout ---------------------------------------------------------- */
+.card-based-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.card-based-question {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--survey-border, #dde2ea);
+    border-top: 3px solid var(--survey-primary, #0d6efd);
+    border-radius: var(--survey-radius, 12px);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    padding: 1.5rem 1.5rem 1rem;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-based-question:hover {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    transform: translateY(-2px);
+}
+
+.card-based-question-number {
+    position: absolute;
+    top: -14px;
+    left: 1.25rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--survey-primary, #0d6efd);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+
+.card-based-question .sq-label {
+    margin-top: 0.5rem;
+}
+
+/* ---- Conversational layout ---------------------------------------------------- */
+.conv-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+}
+
+.conv-question {
+    width: 100%;
+    max-width: 620px;
+    animation: convFadeIn 0.35s ease both;
+}
+
+.conv-question .sq-label {
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    text-align: left;
+}
+
+.conv-progress-rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: var(--survey-primary, #0d6efd);
+    transition: width 0.3s ease;
+}
+
+.conv-next {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.75rem;
+}
+
+@keyframes convFadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Matrix question ------------------------------------------------------ */
+.sq-matrix-table {
+    font-size: 0.92rem;
+}
+
+.sq-matrix-table th {
+    font-weight: 600;
+    color: var(--survey-muted, #64748b);
+    border-bottom-width: 1px;
+}
+
+.sq-matrix-table td:first-child {
+    text-align: left;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.sq-matrix-stacked-row:not(:last-child) {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--survey-border, #dde2ea);
+}
+
+/* ---- Ranking question ------------------------------------------------------ */
+.sq-ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sq-ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1.5px solid var(--survey-border, #dde2ea);
+    border-radius: var(--survey-radius, 12px);
+    padding: 0.6rem 0.9rem;
+    background: #fff;
+}
+
+.sq-ranking-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--survey-primary, #0d6efd);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.sq-ranking-label {
+    flex: 1;
+}
+
+.sq-ranking-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+/* ---- Slider question -------------------------------------------------------- */
+.sq-slider-wrap .form-range {
+    accent-color: var(--survey-primary, #0d6efd);
+}
+
+.sq-slider-output {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--survey-primary, #0d6efd);
+    text-align: center;
+    margin: 0.4rem 0;
+}

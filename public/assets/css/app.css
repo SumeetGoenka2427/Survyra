@@ -1,0 +1,7 @@
+body {
+    min-height: 100vh;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+}
