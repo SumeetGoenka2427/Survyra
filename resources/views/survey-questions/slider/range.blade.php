@@ -3,9 +3,10 @@
     $max = $question->settings['scale_max'] ?? 10;
     $mid = (int) round(($min + $max) / 2);
     $fieldId = 'answer-'.$question->id;
+    $current = ($existingAnswer ?? null) !== null && $existingAnswer !== '' ? $existingAnswer : $mid;
 @endphp
 <div class="sq-slider-wrap mb-2">
-    <div class="sq-slider-output" id="{{ $fieldId }}-output">{{ $mid }}</div>
+    <div class="sq-slider-output" id="{{ $fieldId }}-output">{{ $current }}</div>
     <input
         type="range"
         name="answer"
@@ -14,7 +15,7 @@
         min="{{ $min }}"
         max="{{ $max }}"
         step="1"
-        value="{{ $mid }}"
+        value="{{ $current }}"
         oninput="document.getElementById('{{ $fieldId }}-output').textContent = this.value"
         @required($question->is_required)
     >

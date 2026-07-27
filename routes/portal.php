@@ -38,7 +38,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
         Route::get('company', [CompanyProfileController::class, 'edit'])->name('company.edit');
-        Route::patch('company', [CompanyProfileController::class, 'update'])->name('company.update');
+        Route::patch('company', [CompanyProfileController::class, 'update'])->name('company.update')->middleware('client.can-edit');
 
         Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 
@@ -50,8 +50,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
             Route::get('responses/{response}', [ResponseController::class, 'show'])->name('responses.show');
 
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-            Route::post('reports', [ReportController::class, 'store'])->name('reports.store');
-            Route::delete('reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
+            Route::post('reports', [ReportController::class, 'store'])->name('reports.store')->middleware('client.can-edit');
+            Route::delete('reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy')->middleware('client.can-edit');
         });
 
         // Team management
@@ -62,16 +62,16 @@ Route::prefix('portal')->name('portal.')->group(function () {
         // Integrations
         Route::prefix('integrations')->name('integrations.')->group(function () {
             Route::get('api-keys', [ApiKeyController::class, 'index'])->name('api-keys');
-            Route::post('api-keys', [ApiKeyController::class, 'store'])->name('api-keys.store');
-            Route::delete('api-keys/{apiKey}', [ApiKeyController::class, 'destroy'])->name('api-keys.destroy');
+            Route::post('api-keys', [ApiKeyController::class, 'store'])->name('api-keys.store')->middleware('client.can-edit');
+            Route::delete('api-keys/{apiKey}', [ApiKeyController::class, 'destroy'])->name('api-keys.destroy')->middleware('client.can-edit');
 
             Route::get('webhooks', [WebhookController::class, 'index'])->name('webhooks');
-            Route::post('webhooks', [WebhookController::class, 'store'])->name('webhooks.store');
-            Route::delete('webhooks/{webhook}', [WebhookController::class, 'destroy'])->name('webhooks.destroy');
+            Route::post('webhooks', [WebhookController::class, 'store'])->name('webhooks.store')->middleware('client.can-edit');
+            Route::delete('webhooks/{webhook}', [WebhookController::class, 'destroy'])->name('webhooks.destroy')->middleware('client.can-edit');
 
             Route::get('slack', [SlackIntegrationController::class, 'index'])->name('slack');
-            Route::post('slack', [SlackIntegrationController::class, 'store'])->name('slack.store');
-            Route::delete('slack', [SlackIntegrationController::class, 'destroy'])->name('slack.destroy');
+            Route::post('slack', [SlackIntegrationController::class, 'store'])->name('slack.store')->middleware('client.can-edit');
+            Route::delete('slack', [SlackIntegrationController::class, 'destroy'])->name('slack.destroy')->middleware('client.can-edit');
         });
 
         // Onboarding

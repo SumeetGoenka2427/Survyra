@@ -1,8 +1,18 @@
 <x-admin-layout title="New Survey">
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.surveys.store') }}" x-data="{ mode: '{{ old('mode', 'template') }}' }">
+            @if (!empty($aiQuestions))
+                <div class="alert alert-info d-flex align-items-center gap-2">
+                    <i class="bi bi-robot fs-5"></i>
+                    <div>{{ count($aiQuestions) }} question{{ count($aiQuestions) === 1 ? '' : 's' }} from the AI Survey Generator will be added to this survey once created.</div>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('admin.surveys.store') }}" x-data="{ mode: '{{ old('mode', !empty($aiQuestions) ? 'blank' : 'template') }}' }">
                 @csrf
+                @if (!empty($aiQuestions))
+                    <input type="hidden" name="ai_questions" value="{{ json_encode($aiQuestions) }}">
+                @endif
 
                 <x-form-select
                     name="client_id"
@@ -13,7 +23,7 @@
                     required
                 />
 
-                <x-form-input name="title" label="Survey Title" required placeholder="e.g. Customer Satisfaction Survey" />
+                <x-form-input name="title" label="Survey Title" required placeholder="e.g. Customer Satisfaction Survey" :value="$aiTitle" />
 
                 {{-- Mode toggle --}}
                 <div class="mb-3">
@@ -62,6 +72,14 @@
                 </div>
 
                 @error('mode')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+
+                <x-form-select
+                    name="theme_id"
+                    label="Theme (optional)"
+                    :options="$themes->pluck('name', 'id')"
+                    placeholder="Use the default theme"
+                />
+                <div class="form-text mb-3">You can change this later, or duplicate it into a custom theme for this client.</div>
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Create & Customize</button>

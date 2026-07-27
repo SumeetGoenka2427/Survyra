@@ -12,6 +12,7 @@
             value="{{ $i }}"
             autocomplete="off"
             @required($question->is_required)
+            @checked((string) ($existingAnswer ?? '') === (string) $i)
         >
         <label class="sq-btn" for="answer-{{ $question->id }}-{{ $i }}">{{ $i }}</label>
     @endfor

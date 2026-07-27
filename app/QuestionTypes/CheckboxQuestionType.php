@@ -40,7 +40,13 @@ class CheckboxQuestionType extends AbstractQuestionType
 
     public function validationRules(array $settings, bool $required): array
     {
-        return [$this->requiredRule($required), 'array'];
+        $rules = [$this->requiredRule($required), 'array'];
+
+        if ($max = $settings['max_choices'] ?? null) {
+            $rules[] = "max:{$max}";
+        }
+
+        return $rules;
     }
 
     public function score(mixed $answer, array $settings): ?float

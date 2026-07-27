@@ -50,7 +50,9 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (! Auth::user()->is_active) {
+        $user = Auth::user();
+
+        if (! $user->is_active) {
             Auth::logout();
 
             throw ValidationException::withMessages([
@@ -59,6 +61,16 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // Password verified, but don't finish signing in yet if 2FA is
+        // enabled — log back out and stash a pending challenge in the
+        // session instead. The controller redirects to the code-entry page,
+        // which is the only place Auth::login() actually happens for this user.
+        if ($user->two_factor_enabled) {
+            Auth::logout();
+            $this->session()->put('2fa_user_id', $user->id);
+            $this->session()->put('2fa_remember', $this->boolean('remember'));
+        }
     }
 
     /**

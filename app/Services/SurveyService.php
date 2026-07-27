@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Jobs\SendSlackNotificationJob;
 use App\Models\Client;
+use App\Models\QuestionType;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyTemplate;
@@ -103,6 +105,40 @@ class SurveyService
         });
     }
 
+    /**
+     * Turn the AI Survey Generator's draft output into real SurveyQuestion
+     * rows. Re-validates every question's `type` against actually-registered
+     * question types rather than trusting it outright - the draft travels
+     * through a hidden form field on its way here, not straight from the AI
+     * call, so it's untrusted client input by the time it arrives.
+     *
+     * @param array<int, array{type?: string, text?: string, options?: array<int, string>, is_required?: bool}> $questions
+     */
+    public function addQuestionsFromDraft(Survey $survey, array $questions): void
+    {
+        $typeIds = QuestionType::query()->whereIn('key', array_column($questions, 'type'))->pluck('id', 'key');
+        $order = (int) $survey->questions()->max('order');
+
+        foreach ($questions as $question) {
+            $key = $question['type'] ?? null;
+            $text = trim((string) ($question['text'] ?? ''));
+
+            if (! $key || ! isset($typeIds[$key]) || $text === '') {
+                continue;
+            }
+
+            $order++;
+
+            $survey->questions()->create([
+                'question_type_id' => $typeIds[$key],
+                'question_text' => $text,
+                'options' => ! empty($question['options']) ? array_values($question['options']) : null,
+                'is_required' => (bool) ($question['is_required'] ?? false),
+                'order' => $order,
+            ]);
+        }
+    }
+
     public function duplicate(Survey $survey, int $createdByUserId): Survey
     {
         return DB::transaction(function () use ($survey, $createdByUserId) {
@@ -188,11 +224,17 @@ class SurveyService
             throw new InvalidArgumentException('A survey needs at least one question before it can be published.');
         }
 
-        return $this->surveys->update($survey, [
+        $survey = $this->surveys->update($survey, [
             'slug' => $survey->slug ?? $this->generateUniqueSlug(),
             'status' => 'published',
             'published_at' => now(),
         ]);
+
+        SendSlackNotificationJob::dispatch($survey->client_id, 'survey_published', [
+            'Survey' => $survey->title,
+        ]);
+
+        return $survey;
     }
 
     public function archive(Survey $survey): Survey

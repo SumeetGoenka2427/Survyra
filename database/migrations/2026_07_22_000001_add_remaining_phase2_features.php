@@ -10,14 +10,20 @@ return new class extends Migration
     {
         // TOTP for admin users
         Schema::table('users', function (Blueprint $table) {
-            $table->string('two_factor_secret')->nullable()->after('password');
+            // text, not string: encrypt()'d values run 300-400+ chars, well
+            // past varchar(255) - MySQL correctly rejects the insert where
+            // SQLite silently truncates-or-accepts, which hid this in tests.
+            $table->text('two_factor_secret')->nullable()->after('password');
             $table->text('two_factor_recovery_codes')->nullable()->after('two_factor_secret');
             $table->boolean('two_factor_enabled')->default(false)->after('two_factor_recovery_codes');
         });
 
         // TOTP for client users
         Schema::table('client_users', function (Blueprint $table) {
-            $table->string('two_factor_secret')->nullable()->after('password');
+            // text, not string: encrypt()'d values run 300-400+ chars, well
+            // past varchar(255) - MySQL correctly rejects the insert where
+            // SQLite silently truncates-or-accepts, which hid this in tests.
+            $table->text('two_factor_secret')->nullable()->after('password');
             $table->text('two_factor_recovery_codes')->nullable()->after('two_factor_secret');
             $table->boolean('two_factor_enabled')->default(false)->after('two_factor_recovery_codes');
         });

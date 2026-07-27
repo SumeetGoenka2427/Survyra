@@ -20,9 +20,9 @@
                         <i class="bi bi-download"></i> Export
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                        <li><a class="dropdown-item" href="#">PDF Report</a></li>
-                        <li><a class="dropdown-item" href="#">Excel</a></li>
-                        <li><a class="dropdown-item" href="#">CSV</a></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.clients.analytics.export', ['client' => $client, 'format' => 'pdf', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}">PDF Report</a></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.clients.analytics.export', ['client' => $client, 'format' => 'excel', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}">Excel</a></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.clients.analytics.export', ['client' => $client, 'format' => 'csv', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}">CSV</a></li>
                     </ul>
                 </div>
             </div>
@@ -221,7 +221,33 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const chartData = @json($chartData);
-            
+
+            // Date range filter
+            const fromInput = document.getElementById('analytics-from');
+            const toInput = document.getElementById('analytics-to');
+            const applyRange = (from, to) => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('from', from);
+                url.searchParams.set('to', to);
+                window.location.href = url.toString();
+            };
+
+            document.getElementById('analytics-apply')?.addEventListener('click', () => {
+                if (fromInput.value && toInput.value) {
+                    applyRange(fromInput.value, toInput.value);
+                }
+            });
+
+            document.querySelectorAll('[data-preset-days]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const days = parseInt(button.getAttribute('data-preset-days'), 10);
+                    const to = new Date();
+                    const from = new Date();
+                    from.setDate(from.getDate() - days);
+                    applyRange(from.toISOString().slice(0, 10), to.toISOString().slice(0, 10));
+                });
+            });
+
             // Color palette
             const colors = {
                 primary: '#4f46e5',

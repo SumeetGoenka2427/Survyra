@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AiSurveyController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Admin\ClientAnalyticsController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
@@ -37,6 +38,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
         Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
+
+        Route::get('two-factor-challenge', [TwoFactorChallengeController::class, 'create'])->name('two-factor.challenge');
+        Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->name('two-factor.challenge.store');
     });
 
     Route::middleware('auth:web')->group(function () {
@@ -44,6 +48,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard/recent-clients', [DashboardController::class, 'recentClientsFragment'])->name('dashboard.recent-clients');
+        Route::get('dashboard/recent-responses', [DashboardController::class, 'recentResponsesFragment'])->name('dashboard.recent-responses');
         Route::get('search', [SearchController::class, 'index'])->name('search');
         Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 
@@ -59,6 +64,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Client Analytics Dashboard
             Route::get('clients/{client}/analytics', [ClientAnalyticsController::class, 'show'])->name('clients.analytics');
             Route::get('clients/{client}/analytics/data', [ClientAnalyticsController::class, 'data'])->name('clients.analytics.data');
+            Route::get('clients/{client}/analytics/export/{format}', [ClientAnalyticsController::class, 'export'])->name('clients.analytics.export');
 
             Route::get('audit-log', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-log.index');
         });
@@ -82,6 +88,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('templates/{template}/questions', [SurveyTemplateQuestionController::class, 'store'])->name('templates.questions.store');
             Route::put('templates/{template}/questions/{question}', [SurveyTemplateQuestionController::class, 'update'])->name('templates.questions.update');
             Route::delete('templates/{template}/questions/{question}', [SurveyTemplateQuestionController::class, 'destroy'])->name('templates.questions.destroy');
+            Route::post('templates/{template}/questions/{question}/duplicate', [SurveyTemplateQuestionController::class, 'duplicate'])->name('templates.questions.duplicate');
             Route::patch('templates/{template}/questions/{question}/move-up', [SurveyTemplateQuestionController::class, 'moveUp'])->name('templates.questions.move-up');
             Route::patch('templates/{template}/questions/{question}/move-down', [SurveyTemplateQuestionController::class, 'moveDown'])->name('templates.questions.move-down');
 
@@ -141,6 +148,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::get('responses', [ResponseController::class, 'index'])->name('responses.index');
             Route::get('responses/{response}', [ResponseController::class, 'show'])->name('responses.show');
+            Route::get('uploads/{upload}', [\App\Http\Controllers\Admin\ResponseUploadController::class, 'download'])->name('uploads.download');
 
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::post('reports', [ReportController::class, 'store'])->name('reports.store');

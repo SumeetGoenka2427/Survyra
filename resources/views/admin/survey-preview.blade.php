@@ -93,6 +93,9 @@
                                             <div class="card-based-question">
                                                 <div class="card-based-question-number">{{ $qIndex + 1 }}</div>
                                                 <h5 class="sq-label">{{ $question->question_text }}</h5>
+                                                @if (!empty($question->settings['help_text']))
+                                                    <div class="text-muted small mb-2">{{ $question->settings['help_text'] }}</div>
+                                                @endif
                                                 @include($question->questionType->contract()->renderComponent($question->settings['display_style'] ?? 'default'), ['question' => $question])
                                             </div>
                                         @endforeach
@@ -101,6 +104,9 @@
                                     @foreach ($stepQuestions as $question)
                                         <div class="mb-4">
                                             <h4 class="sq-label">{{ $question->question_text }}</h4>
+                                            @if (!empty($question->settings['help_text']))
+                                                <div class="text-muted small mb-2">{{ $question->settings['help_text'] }}</div>
+                                            @endif
                                             @include($question->questionType->contract()->renderComponent($question->settings['display_style'] ?? 'default'), ['question' => $question])
                                         </div>
                                     @endforeach

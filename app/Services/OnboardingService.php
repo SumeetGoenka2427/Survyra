@@ -9,11 +9,19 @@ use App\Models\Survey;
 class OnboardingService
 {
     /**
-     * Get or create the onboarding checklist for a client.
+     * Get the onboarding checklist for a client, with every computed flag
+     * refreshed against current state on every call (not just at creation).
+     * `firstOrCreate` used to snapshot these once and freeze them forever -
+     * `markCompleted()` was meant to update them afterwards but was never
+     * called from anywhere, so a step never actually flipped to done once
+     * the row existed. Recomputing live is simpler and can't drift, since
+     * these are all cheap existence checks against data that already exists
+     * for other reasons. `dismissed` is untouched here - it's a real user
+     * action, not a derived flag.
      */
     public function checklistFor(Client $client): OnboardingChecklist
     {
-        return OnboardingChecklist::firstOrCreate(
+        return OnboardingChecklist::query()->updateOrCreate(
             ['client_id' => $client->id],
             [
                 'profile_completed' => $this->checkProfileCompleted($client),
@@ -24,18 +32,6 @@ class OnboardingService
                 'integrations_configured' => $this->checkIntegrations($client),
             ]
         );
-    }
-
-    /**
-     * Mark a checklist item as completed.
-     */
-    public function markCompleted(Client $client, string $key): void
-    {
-        $checklist = $this->checklistFor($client);
-
-        if (in_array($key, (new OnboardingChecklist())->getFillable(), true)) {
-            $checklist->update([$key => true]);
-        }
     }
 
     /**

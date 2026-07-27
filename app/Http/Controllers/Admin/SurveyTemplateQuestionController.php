@@ -42,6 +42,16 @@ class SurveyTemplateQuestionController extends Controller
         return back()->with('status', 'Question removed.');
     }
 
+    public function duplicate(SurveyTemplate $template, SurveyTemplateQuestion $question): RedirectResponse
+    {
+        $this->authorize('update', $template);
+        $this->assertBelongsToTemplate($template, $question);
+
+        $this->templates->duplicateQuestion($question);
+
+        return back()->with('status', 'Question duplicated.');
+    }
+
     public function moveUp(SurveyTemplate $template, SurveyTemplateQuestion $question): RedirectResponse
     {
         $this->authorize('update', $template);

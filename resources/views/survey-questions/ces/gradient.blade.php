@@ -6,7 +6,7 @@
 <div class="sq-nps-row sq-nps-gradient">
     @for ($i = $min; $i <= $max; $i++)
         @php $hue = round((($i - $min) / $range) * 120); @endphp
-        <input type="radio" class="sq-option-input" name="answer" id="answer-{{ $i }}" value="{{ $i }}" autocomplete="off" @required($question->is_required)>
+        <input type="radio" class="sq-option-input" name="answer" id="answer-{{ $i }}" value="{{ $i }}" autocomplete="off" @required($question->is_required) @checked((string) ($existingAnswer ?? '') === (string) $i)>
         <label class="sq-btn sq-nps-gradient-btn" for="answer-{{ $i }}" style="background: hsl({{ $hue }}, 70%, 50%);">{{ $i }}</label>
     @endfor
 </div>

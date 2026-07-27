@@ -1,25 +1,5 @@
 <x-portal-layout title="Dashboard">
-    @if (isset($onboarding) && ! $onboarding['all_done'])
-        <div class="card border-0 shadow-sm mb-4 border-start border-4 border-primary">
-            <div class="card-body">
-                <h6 class="fw-semibold mb-3">🚀 Getting Started — {{ $onboarding['completed'] }}/{{ $onboarding['total'] }} complete</h6>
-                <div class="row g-2">
-                    @foreach ($onboarding['steps'] as $step)
-                        <div class="col-md-3">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi {{ $step['done'] ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted' }}"></i>
-                                @if ($step['url'] && ! $step['done'])
-                                    <a href="{{ $step['url'] }}" class="small">{{ $step['label'] }}</a>
-                                @else
-                                    <span class="small {{ $step['done'] ? 'text-muted text-decoration-line-through' : '' }}">{{ $step['label'] }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
+    @include('portal.partials.onboarding-checklist')
     <div
         id="analytics-app"
         data-data-url="{{ route('portal.analytics.data') }}"

@@ -83,7 +83,7 @@
         }
     }
 
-    applyTheme(localStorage.getItem('ds-theme') || 'light');
+    applyTheme(localStorage.getItem('ds-theme') || 'dark');
 
     if (themeToggle) {
         themeToggle.addEventListener('click', function () {

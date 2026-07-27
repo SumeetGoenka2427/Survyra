@@ -53,6 +53,11 @@
                             <label class="form-check-label" for="{{ $sentiment }}-fb">Show Facebook link</label>
                         </div>
                         <div class="form-check">
+                            <input type="hidden" name="show_instagram" value="0">
+                            <input type="checkbox" name="show_instagram" value="1" class="form-check-input" id="{{ $sentiment }}-instagram" @checked($rule?->show_instagram)>
+                            <label class="form-check-label" for="{{ $sentiment }}-instagram">Show Instagram link</label>
+                        </div>
+                        <div class="form-check">
                             <input type="hidden" name="show_website" value="0">
                             <input type="checkbox" name="show_website" value="1" class="form-check-input" id="{{ $sentiment }}-web" @checked($rule?->show_website)>
                             <label class="form-check-label" for="{{ $sentiment }}-web">Show website link</label>

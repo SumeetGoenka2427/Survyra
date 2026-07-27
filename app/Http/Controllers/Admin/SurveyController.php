@@ -54,10 +54,19 @@ class SurveyController extends Controller
     {
         $this->authorize('create', Survey::class);
 
+        $aiQuestions = null;
+        if ($request->string('source')->toString() === 'ai_generator' && $request->filled('questions')) {
+            $decoded = json_decode($request->string('questions')->toString(), true);
+            $aiQuestions = is_array($decoded) ? $decoded : null;
+        }
+
         return view('admin.surveys.create', [
             'clients' => Client::query()->where('status', '!=', 'inactive')->orderBy('company_name')->get(),
             'templatesByIndustry' => $this->templates->allGroupedByIndustry(),
+            'themes' => $this->themes->all()->where('is_system', true)->values(),
             'selectedClientId' => $request->integer('client_id') ?: null,
+            'aiTitle' => $request->string('title')->toString() ?: null,
+            'aiQuestions' => $aiQuestions,
         ]);
     }
 
@@ -72,9 +81,20 @@ class SurveyController extends Controller
                 $request->validated('layout'),
                 $request->user()->id
             );
+
+            if ($request->filled('ai_questions')) {
+                $questions = json_decode($request->string('ai_questions')->toString(), true);
+                if (is_array($questions)) {
+                    $this->surveys->addQuestionsFromDraft($survey, $questions);
+                }
+            }
         } else {
             $template = $this->templates->find($request->validated('survey_template_id'));
             $survey = $this->surveys->createFromTemplate($client, $template, $request->validated('title'), $request->user()->id);
+        }
+
+        if ($request->filled('theme_id')) {
+            $survey = $this->surveys->update($survey, ['theme_id' => $request->validated('theme_id')]);
         }
 
         return redirect()->route('admin.surveys.edit', $survey)
@@ -148,7 +168,14 @@ class SurveyController extends Controller
             return back()->withErrors(['survey' => $message]);
         }
 
-        $this->surveys->publish($survey);
+        try {
+            $this->surveys->publish($survey);
+        } catch (\InvalidArgumentException $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+            return back()->withErrors(['survey' => $e->getMessage()]);
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['html' => $this->renderFragment($request)]);

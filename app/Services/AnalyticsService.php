@@ -139,7 +139,17 @@ class AnalyticsService
         // Day of week distribution
         $dayOfWeek = $this->dayOfWeekDistribution($surveyIds, $from, $to);
 
-        return [
+        // Completion rate broken down by device — feeds both a chart and the insights engine
+        $deviceCompletionRates = $this->deviceCompletionRates($surveyIds, $from, $to);
+
+        // Per-survey comparison (completion rate, volume, primary metric)
+        $surveyPerformance = $this->surveyPerformance($surveys, $from, $to);
+
+        // Joint hour x day-of-week distribution, for the heatmap (hourly_distribution/
+        // day_of_week_distribution above are marginals only, not a true cross-tab)
+        $hourDayHeatmap = $this->hourByDayHeatmap($surveyIds, $from, $to);
+
+        $snapshot = [
             'total_responses' => $total,
             'today_responses' => $today,
             'this_week_responses' => $thisWeek,
@@ -174,7 +184,14 @@ class AnalyticsService
             'completed_count' => $completedCount,
             'abandoned_count' => $abandonedCount,
             'avg_daily_responses' => $periodLength > 0 ? round($total / max($periodLength, 1), 1) : 0,
+            'device_completion_rates' => $deviceCompletionRates,
+            'survey_performance' => $surveyPerformance,
+            'hour_day_heatmap' => $hourDayHeatmap,
         ];
+
+        $snapshot['insights'] = $this->generateInsights($snapshot);
+
+        return $snapshot;
     }
 
     /**
@@ -202,24 +219,8 @@ class AnalyticsService
         $prevTotal = (clone $responseBase)->whereBetween('started_at', [$prevFrom, $prevTo])->count();
         $responseGrowth = $prevTotal > 0 ? round((($totalResponses - $prevTotal) / $prevTotal) * 100, 1) : ($totalResponses > 0 ? 100 : 0);
 
-        // Survey performance
-        $surveyPerformance = $surveys->map(function ($survey) use ($from, $to) {
-            $responses = $survey->responses()
-                ->whereBetween('started_at', [$from, $to]);
-
-            $total = (clone $responses)->count();
-            $completed = (clone $responses)->where('status', 'completed')->count();
-
-            return [
-                'id' => $survey->id,
-                'title' => $survey->title,
-                'status' => $survey->status,
-                'total_responses' => $total,
-                'completed_responses' => $completed,
-                'completion_rate' => $total > 0 ? round($completed / $total * 100, 1) : 0,
-                'created_at' => $survey->created_at,
-            ];
-        })->sortByDesc('total_responses')->values();
+        // Survey performance (shared computation — see surveyPerformance())
+        $surveyPerformance = $this->surveyPerformance($surveys, $from, $to);
 
         // Sentiment distribution
         $sentimentCounts = (clone $responseBase)
@@ -262,7 +263,7 @@ class AnalyticsService
         // Team/member stats
         $totalMembers = ClientUser::where('client_id', $client->id)->count();
         $activeMembers = ClientUser::where('client_id', $client->id)
-            ->whereHas('user', fn ($q) => $q->where('is_active', true))
+            ->where('is_active', true)
             ->count();
 
         // Contact stats
@@ -568,27 +569,40 @@ class AnalyticsService
     }
 
     /**
+     * Raw `started_at` timestamps for the period — shared by every bucketing
+     * method below so week/hour/day-of-week grouping can happen in PHP via
+     * Carbon instead of driver-specific SQL functions (MySQL's YEARWEEK/HOUR/
+     * DAYOFWEEK have no SQLite equivalent, which broke the whole analytics
+     * suite under the test DB).
+     *
+     * @param  Collection<int, int>  $surveyIds
+     * @return Collection<int, Carbon>
+     */
+    private function responseTimestamps(Collection $surveyIds, Carbon $from, Carbon $to): Collection
+    {
+        return Response::query()
+            ->whereIn('survey_id', $surveyIds)
+            ->whereBetween('started_at', [$from, $to])
+            ->pluck('started_at');
+    }
+
+    /**
      * @param  Collection<int, int>  $surveyIds
      * @return array{labels: array<int, string>, series: array<int, int>}
      */
     private function weeklyTrend(Collection $surveyIds, Carbon $from, Carbon $to): array
     {
-        $rows = Response::query()
-            ->whereIn('survey_id', $surveyIds)
-            ->whereBetween('started_at', [$from, $to])
-            ->selectRaw('YEARWEEK(started_at, 1) as week, count(*) as count')
-            ->groupBy('week')
-            ->orderBy('week')
-            ->pluck('count', 'week');
+        $counts = $this->responseTimestamps($surveyIds, $from, $to)
+            ->countBy(fn ($timestamp) => Carbon::parse($timestamp)->format('oW'));
 
         $labels = [];
         $series = [];
         $cursor = $from->copy()->startOfWeek();
 
         while ($cursor->lte($to)) {
-            $weekKey = (int) $cursor->format('oW');
+            $weekKey = $cursor->format('oW');
             $labels[] = $cursor->format('M j');
-            $series[] = (int) ($rows[$weekKey] ?? 0);
+            $series[] = (int) ($counts[$weekKey] ?? 0);
             $cursor = $cursor->addWeek();
         }
 
@@ -601,19 +615,14 @@ class AnalyticsService
      */
     private function hourlyDistribution(Collection $surveyIds, Carbon $from, Carbon $to): array
     {
-        $rows = Response::query()
-            ->whereIn('survey_id', $surveyIds)
-            ->whereBetween('started_at', [$from, $to])
-            ->selectRaw('HOUR(started_at) as hour, count(*) as count')
-            ->groupBy('hour')
-            ->orderBy('hour')
-            ->pluck('count', 'hour');
+        $counts = $this->responseTimestamps($surveyIds, $from, $to)
+            ->countBy(fn ($timestamp) => Carbon::parse($timestamp)->hour);
 
         $labels = [];
         $series = [];
         for ($h = 0; $h < 24; $h++) {
             $labels[] = sprintf('%02d:00', $h);
-            $series[] = (int) ($rows[$h] ?? 0);
+            $series[] = (int) ($counts[$h] ?? 0);
         }
 
         return ['labels' => $labels, 'series' => $series];
@@ -626,19 +635,17 @@ class AnalyticsService
     private function dayOfWeekDistribution(Collection $surveyIds, Carbon $from, Carbon $to): array
     {
         $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        $rows = Response::query()
-            ->whereIn('survey_id', $surveyIds)
-            ->whereBetween('started_at', [$from, $to])
-            ->selectRaw('DAYOFWEEK(started_at) as dow, count(*) as count')
-            ->groupBy('dow')
-            ->pluck('count', 'dow');
+
+        // Carbon::dayOfWeek is 0 (Sunday) .. 6 (Saturday); keep the same
+        // 1-indexed (Sunday..Saturday) shape the view already expects.
+        $counts = $this->responseTimestamps($surveyIds, $from, $to)
+            ->countBy(fn ($timestamp) => Carbon::parse($timestamp)->dayOfWeek + 1);
 
         $labels = [];
         $series = [];
         for ($i = 1; $i <= 7; $i++) {
             $labels[] = $days[$i - 1];
-            $series[] = (int) ($rows[$i] ?? 0);
+            $series[] = (int) ($counts[$i] ?? 0);
         }
 
         return ['labels' => $labels, 'series' => $series];
@@ -667,6 +674,244 @@ class AnalyticsService
         }
 
         return $result;
+    }
+
+    /**
+     * Completion rate per device — used for a chart and to power the
+     * "mobile completes worse than desktop"-style insight below.
+     *
+     * @param  Collection<int, int>  $surveyIds
+     * @return array<string, float>
+     */
+    private function deviceCompletionRates(Collection $surveyIds, Carbon $from, Carbon $to): array
+    {
+        $rows = Response::query()
+            ->whereIn('survey_id', $surveyIds)
+            ->whereBetween('started_at', [$from, $to])
+            ->whereNotNull('device')
+            ->selectRaw('device, status, count(*) as count')
+            ->groupBy('device', 'status')
+            ->get()
+            ->groupBy('device');
+
+        return $rows->map(function (Collection $statuses) {
+            $total = $statuses->sum('count');
+            $completed = $statuses->firstWhere('status', 'completed')->count ?? 0;
+
+            return $total > 0 ? round($completed / $total * 100, 1) : 0.0;
+        })->toArray();
+    }
+
+    /**
+     * One row per survey: volume, completion rate, avg completion time, and
+     * primary score metric if the survey has one. Shared by both the survey
+     * analytics dashboard (comparison table across a client's surveys) and
+     * the client analytics dashboard (its existing survey-performance table).
+     *
+     * @param  Collection<int, Survey>  $surveys
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function surveyPerformance(Collection $surveys, Carbon $from, Carbon $to): Collection
+    {
+        return $surveys->map(function (Survey $survey) use ($from, $to) {
+            $responses = $survey->responses()->whereBetween('started_at', [$from, $to]);
+            $total = (clone $responses)->count();
+            $completed = (clone $responses)->where('status', 'completed')->count();
+
+            $avgSeconds = (clone $responses)
+                ->where('status', 'completed')
+                ->whereNotNull('completed_at')
+                ->get(['started_at', 'completed_at'])
+                ->map(fn (Response $r) => $r->completed_at->diffInSeconds($r->started_at, true))
+                ->avg();
+
+            $metricKey = null;
+            $metricValue = null;
+
+            if ($survey->primary_score_question_id) {
+                $question = $survey->primaryScoreQuestion()->with('questionType')->first();
+                $key = $question ? (self::METRIC_KEYS[$question->questionType->key] ?? null) : null;
+
+                if ($key) {
+                    $computed = $this->computeMetrics(collect([$survey]), $from, $to);
+
+                    if (isset($computed[$key])) {
+                        $metricKey = $key;
+                        $metricValue = $computed[$key]['value'];
+                    }
+                }
+            }
+
+            return [
+                'id' => $survey->id,
+                'title' => $survey->title,
+                'status' => $survey->status,
+                'total_responses' => $total,
+                'completed_responses' => $completed,
+                'completion_rate' => $total > 0 ? round($completed / $total * 100, 1) : 0,
+                'avg_completion_seconds' => $avgSeconds ? (int) round($avgSeconds) : null,
+                'metric_key' => $metricKey,
+                'metric_value' => $metricValue,
+                'created_at' => $survey->created_at,
+            ];
+        })->sortByDesc('total_responses')->values();
+    }
+
+    /**
+     * Rule-based insight cards derived purely from an already-computed
+     * snapshot — no AI call, no new data source, just thresholds over
+     * numbers the dashboard already has.
+     *
+     * @return array<int, array{type: string, icon: string, title: string, description: string}>
+     */
+    private function generateInsights(array $snapshot): array
+    {
+        $insights = [];
+
+        if ($snapshot['total_responses'] >= 5) {
+            if ($snapshot['growth_rate'] >= 10) {
+                $insights[] = [
+                    'type' => 'positive',
+                    'icon' => 'bi-graph-up-arrow',
+                    'title' => 'Response volume is growing',
+                    'description' => "Responses are up {$snapshot['growth_rate']}% versus the previous period.",
+                ];
+            } elseif ($snapshot['growth_rate'] <= -10) {
+                $insights[] = [
+                    'type' => 'warning',
+                    'icon' => 'bi-graph-down-arrow',
+                    'title' => 'Response volume is declining',
+                    'description' => 'Responses are down '.abs($snapshot['growth_rate']).'% versus the previous period — check distribution channels or campaign activity.',
+                ];
+            }
+        }
+
+        if ($snapshot['total_responses'] > 0) {
+            if ($snapshot['completion_rate'] < 50) {
+                $insights[] = [
+                    'type' => 'warning',
+                    'icon' => 'bi-exclamation-triangle',
+                    'title' => 'Low completion rate',
+                    'description' => "Only {$snapshot['completion_rate']}% of respondents complete the survey — {$snapshot['abandonment_rate']}% abandon before finishing. Consider shortening the survey or reviewing logic/skip rules.",
+                ];
+            } elseif ($snapshot['completion_rate'] >= 85) {
+                $insights[] = [
+                    'type' => 'positive',
+                    'icon' => 'bi-check2-circle',
+                    'title' => 'Strong completion rate',
+                    'description' => "{$snapshot['completion_rate']}% of respondents who start the survey finish it.",
+                ];
+            }
+        }
+
+        $sentimentTotal = array_sum($snapshot['sentiment_counts']);
+        if ($sentimentTotal >= 5) {
+            $negativePct = round($snapshot['sentiment_counts']['negative'] / $sentimentTotal * 100, 1);
+            $positivePct = round($snapshot['sentiment_counts']['positive'] / $sentimentTotal * 100, 1);
+
+            if ($negativePct >= 30) {
+                $insights[] = [
+                    'type' => 'warning',
+                    'icon' => 'bi-emoji-frown',
+                    'title' => 'Elevated negative sentiment',
+                    'description' => "{$negativePct}% of sentiment-tagged responses are negative — review recent negative feedback for recurring issues.",
+                ];
+            } elseif ($positivePct >= 70) {
+                $insights[] = [
+                    'type' => 'positive',
+                    'icon' => 'bi-emoji-smile',
+                    'title' => 'Positive sentiment is strong',
+                    'description' => "{$positivePct}% of sentiment-tagged responses are positive.",
+                ];
+            }
+        }
+
+        if (isset($snapshot['metrics']['nps'])) {
+            $nps = $snapshot['metrics']['nps']['value'];
+
+            if ($nps >= 50) {
+                $insights[] = [
+                    'type' => 'positive',
+                    'icon' => 'bi-trophy',
+                    'title' => 'Excellent NPS',
+                    'description' => "An NPS of {$nps} means promoters strongly outweigh detractors.",
+                ];
+            } elseif ($nps < 0) {
+                $insights[] = [
+                    'type' => 'warning',
+                    'icon' => 'bi-emoji-dizzy',
+                    'title' => 'Negative NPS',
+                    'description' => "An NPS of {$nps} means detractors currently outweigh promoters.",
+                ];
+            }
+        }
+
+        $deviceRates = $snapshot['device_completion_rates'];
+        if (isset($deviceRates['mobile'], $deviceRates['desktop']) && $deviceRates['desktop'] > 0) {
+            $gap = round($deviceRates['desktop'] - $deviceRates['mobile'], 1);
+
+            if ($gap >= 15) {
+                $insights[] = [
+                    'type' => 'warning',
+                    'icon' => 'bi-phone',
+                    'title' => 'Mobile respondents complete less often',
+                    'description' => "Mobile completion is {$deviceRates['mobile']}% vs {$deviceRates['desktop']}% on desktop — consider a shorter or more mobile-friendly layout.",
+                ];
+            }
+        }
+
+        $strugglingSurvey = collect($snapshot['survey_performance'] ?? [])
+            ->first(fn ($s) => $s['total_responses'] >= 10 && $s['completion_rate'] < 40);
+
+        if ($strugglingSurvey) {
+            $insights[] = [
+                'type' => 'warning',
+                'icon' => 'bi-flag',
+                'title' => 'One survey is under-performing',
+                'description' => "\"{$strugglingSurvey['title']}\" has a {$strugglingSurvey['completion_rate']}% completion rate across {$strugglingSurvey['total_responses']} responses — worth reviewing its length or question order.",
+            ];
+        }
+
+        if ($snapshot['avg_completion_seconds'] && $snapshot['avg_completion_seconds'] > 300) {
+            $minutes = round($snapshot['avg_completion_seconds'] / 60, 1);
+            $insights[] = [
+                'type' => 'info',
+                'icon' => 'bi-stopwatch',
+                'title' => 'Long average completion time',
+                'description' => "Respondents take {$minutes} minutes on average — surveys over 5 minutes tend to see higher abandonment.",
+            ];
+        }
+
+        return $insights;
+    }
+
+    /**
+     * True joint hour x day-of-week distribution (not the two marginals
+     * above) — one series per day, shaped for an ApexCharts heatmap.
+     *
+     * @param  Collection<int, int>  $surveyIds
+     * @return array<int, array{name: string, data: array<int, array{x: string, y: int}>}>
+     */
+    private function hourByDayHeatmap(Collection $surveyIds, Carbon $from, Carbon $to): array
+    {
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        $grid = array_fill(0, 7, array_fill(0, 24, 0));
+
+        foreach ($this->responseTimestamps($surveyIds, $from, $to) as $timestamp) {
+            $t = Carbon::parse($timestamp);
+            $grid[$t->dayOfWeek][$t->hour]++;
+        }
+
+        $series = [];
+        foreach ($days as $index => $day) {
+            $data = [];
+            for ($h = 0; $h < 24; $h++) {
+                $data[] = ['x' => sprintf('%02d:00', $h), 'y' => $grid[$index][$h]];
+            }
+            $series[] = ['name' => $day, 'data' => $data];
+        }
+
+        return $series;
     }
 
     private function scaleMaxFor(string $typeKey, array $settings): int

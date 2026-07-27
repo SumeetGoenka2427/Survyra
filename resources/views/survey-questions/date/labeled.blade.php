@@ -1,2 +1,2 @@
 <label class="form-label small text-muted mb-1">Select a date</label>
-<input type="date" name="answer" class="sq-input-modern mb-2" @required($question->is_required)>
+<input type="date" name="answer" class="sq-input-modern mb-2" value="{{ $existingAnswer ?? '' }}" @required($question->is_required)>

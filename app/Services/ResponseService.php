@@ -3,18 +3,22 @@
 namespace App\Services;
 
 use App\Jobs\ResolveResponseGeoJob;
+use App\Jobs\SendSlackNotificationJob;
 use App\Models\CampaignRecipient;
 use App\Models\Response;
 use App\Models\ResponseAnswer;
+use App\Models\ResponseUpload;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyThankyouRule;
 use App\Notifications\NegativeFeedbackReceived;
 use App\Services\WebhookService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -93,9 +97,13 @@ class ResponseService
             ['answer' => $contract->validationRules($settings, $question->is_required)]
         )->validate();
 
+        $storedAnswer = $rawAnswer instanceof UploadedFile
+            ? $this->storeUpload($response, $question, $rawAnswer)
+            : $rawAnswer;
+
         $response->answers()->updateOrCreate(
             ['question_id' => $question->id],
-            ['answer' => $rawAnswer, 'score' => $contract->score($rawAnswer, $settings)]
+            ['answer' => $storedAnswer, 'score' => $contract->score($storedAnswer, $settings)]
         );
 
         // Track last answered question for drop-off analysis
@@ -104,6 +112,67 @@ class ResponseService
             $updateData['status'] = 'in_progress';
         }
         $response->update($updateData);
+    }
+
+    /**
+     * Persist an uploaded file to private storage and record it, returning a
+     * small JSON-safe reference (never the UploadedFile itself) to store as
+     * the answer. Replaces any previously uploaded file for this question on
+     * this response, since a respondent re-uploading supersedes their prior file.
+     *
+     * @return array{upload_id: int, original_name: string, file_size: int}
+     */
+    private function storeUpload(Response $response, SurveyQuestion $question, UploadedFile $file): array
+    {
+        $existing = ResponseUpload::query()
+            ->where('response_id', $response->id)
+            ->where('question_id', $question->id)
+            ->first();
+
+        if ($existing) {
+            Storage::disk('local')->delete($existing->stored_path);
+        }
+
+        $path = $file->store("response-uploads/{$response->id}", 'local');
+
+        $upload = ResponseUpload::updateOrCreate(
+            ['response_id' => $response->id, 'question_id' => $question->id],
+            [
+                'original_name' => $file->getClientOriginalName(),
+                'stored_path' => $path,
+                'mime_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+            ]
+        );
+
+        return [
+            'upload_id' => $upload->id,
+            'original_name' => $upload->original_name,
+            'file_size' => $upload->file_size,
+        ];
+    }
+
+    /**
+     * The respondent's already-saved answer for a question, if any - used to
+     * pre-fill the question view when they revisit it (e.g. via the Back
+     * button) instead of showing it blank and risking the blank re-submit
+     * silently overwriting their real answer with nothing.
+     */
+    public function existingAnswer(Response $response, SurveyQuestion $question): mixed
+    {
+        return $this->answersMap($response)[$question->id] ?? null;
+    }
+
+    /**
+     * Bulk form of existingAnswer() for layouts that render several
+     * questions at once (one_page/card_based/section_wizard) - one query
+     * for the whole visible set instead of one per question.
+     *
+     * @return array<int, mixed>
+     */
+    public function answersByQuestionId(Response $response): array
+    {
+        return $this->answersMap($response);
     }
 
     public function previousQuestion(Response $response): ?SurveyQuestion
@@ -257,12 +326,24 @@ class ResponseService
 
         $this->webhooks->fire('response.completed', $response);
 
+        SendSlackNotificationJob::dispatch($response->client_id, 'response_completed', [
+            'Survey' => $survey->title,
+            'Sentiment' => $rule->sentiment ? ucfirst($rule->sentiment) : 'n/a',
+            'Score' => $score ?? '—',
+        ]);
+
         if ($rule->sentiment === 'negative') {
             $clientUsers = $response->client->clientUsers;
 
             if ($clientUsers->isNotEmpty()) {
                 Notification::send($clientUsers, new NegativeFeedbackReceived($response));
             }
+
+            SendSlackNotificationJob::dispatch($response->client_id, 'negative_feedback', [
+                'Survey' => $survey->title,
+                'Score' => $score ?? '—',
+                'Response' => "#{$response->id}",
+            ]);
         }
 
         return ['sentiment' => $rule->sentiment, 'rule' => $rule];

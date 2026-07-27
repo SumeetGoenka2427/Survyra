@@ -50,9 +50,10 @@ class AnalyticsController extends Controller
         $snapshot = $client ? $this->analytics->forClient($client, $survey, $from, $to) : null;
 
         return response()->json([
-            'html' => $snapshot ? view('analytics.dashboard', ['snapshot' => $snapshot])->render() : '',
+            'html' => $snapshot ? view('analytics.dashboard', ['snapshot' => $snapshot, 'survey' => $survey])->render() : '',
             'chart' => $snapshot ? [
                 'trend' => $snapshot['trend'],
+                'weekly_trend' => $snapshot['weekly_trend'],
                 'sentiment' => $snapshot['sentiment_counts'],
             ] : null,
         ]);

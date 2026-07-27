@@ -1,4 +1,11 @@
-@php $items = $question->options ?? []; @endphp
+@php
+    $items = $question->options ?? [];
+    if (is_array($existingAnswer ?? null) && count(array_intersect($existingAnswer, $items)) === count($items)) {
+        // Respect the respondent's previously saved order rather than the
+        // template's default order when they revisit this question.
+        $items = array_values($existingAnswer);
+    }
+@endphp
 <ul class="sq-ranking-list" data-ranking-list>
     @foreach ($items as $index => $item)
         <li class="sq-ranking-item" data-ranking-item data-value="{{ $item }}">

@@ -66,6 +66,7 @@ class SurveyResponseController extends Controller
                     'response' => $response,
                     'question' => null,
                     'questions' => $this->responses->visibleQuestions($response),
+                    'answers' => $this->responses->answersByQuestionId($response),
                 ])
                 ->cookie($cookieName, $response->uuid, self::COOKIE_MINUTES);
         }
@@ -77,6 +78,7 @@ class SurveyResponseController extends Controller
                     'response' => $response,
                     'question' => null,
                     'section' => $this->responses->currentSection($response),
+                    'answers' => $this->responses->answersByQuestionId($response),
                 ])
                 ->cookie($cookieName, $response->uuid, self::COOKIE_MINUTES);
         }
@@ -92,9 +94,10 @@ class SurveyResponseController extends Controller
         }
 
         $position = $response->answers()->count() + 1;
+        $existingAnswer = $this->responses->existingAnswer($response, $question);
 
         return response()
-            ->view('survey.show', compact('survey', 'response', 'question', 'position'))
+            ->view('survey.show', compact('survey', 'response', 'question', 'position', 'existingAnswer'))
             ->cookie($cookieName, $response->uuid, self::COOKIE_MINUTES);
     }
 
@@ -116,7 +119,19 @@ class SurveyResponseController extends Controller
 
         abort_if(! $question, 404, 'Question not found on this survey.');
 
-        $this->responses->saveAnswer($response, $question, $request->input('answer'));
+        $rawAnswer = $request->hasFile('answer') ? $request->file('answer') : $request->input('answer');
+
+        // A file_upload question can't repopulate its <input type="file"> when
+        // revisited (browsers won't let a value be set on one), so if the
+        // respondent moves on without choosing a new file, keep whatever they
+        // already uploaded rather than overwriting it with a blank answer.
+        $keepsExistingUpload = $question->questionType->key === 'file_upload'
+            && empty($rawAnswer)
+            && $this->responses->existingAnswer($response, $question);
+
+        if (! $keepsExistingUpload) {
+            $this->responses->saveAnswer($response, $question, $rawAnswer);
+        }
 
         if ($this->usesAllQuestionsLayout($survey)) {
             $visible = $this->responses->visibleQuestions($response);
@@ -127,6 +142,7 @@ class SurveyResponseController extends Controller
                     'survey' => $survey,
                     'response' => $response,
                     'questions' => $visible,
+                    'answers' => $this->responses->answersByQuestionId($response),
                 ])->render(),
                 'questionIds' => $visible->pluck('id')->values(),
             ]);
@@ -140,6 +156,7 @@ class SurveyResponseController extends Controller
                 'html' => View::make('survey._section-questions', array_merge([
                     'survey' => $survey,
                     'response' => $response,
+                    'answers' => $this->responses->answersByQuestionId($response),
                 ], $section))->render(),
                 'questionIds' => $section['questions']->pluck('id')->values(),
             ]);
@@ -149,10 +166,16 @@ class SurveyResponseController extends Controller
 
         if ($next) {
             $position = $response->answers()->count() + 1;
+            $existingAnswer = $this->responses->existingAnswer($response, $next);
 
             return response()->json([
                 'done' => false,
-                'html' => View::make($this->questionFrameView($survey), ['question' => $next, 'position' => $position, 'survey' => $survey])->render(),
+                'html' => View::make($this->questionFrameView($survey), [
+                    'question' => $next,
+                    'position' => $position,
+                    'survey' => $survey,
+                    'existingAnswer' => $existingAnswer,
+                ])->render(),
             ]);
         }
 
@@ -176,6 +199,9 @@ class SurveyResponseController extends Controller
         $previousQuestion = $this->responses->previousQuestion($response);
 
         if (! $previousQuestion) {
+            // Only ever reachable out-of-band - the Back button itself never
+            // renders on the first question - but handled gracefully rather
+            // than trusting that can never happen.
             return response()->json(['html' => View::make('survey.show', [
                 'survey' => $survey,
                 'response' => $response,
@@ -185,12 +211,14 @@ class SurveyResponseController extends Controller
         }
 
         $position = $response->answers()->count();
+        $existingAnswer = $this->responses->existingAnswer($response, $previousQuestion);
 
         return response()->json([
             'html' => View::make($this->questionFrameView($survey), [
                 'question' => $previousQuestion,
                 'position' => $position,
                 'survey' => $survey,
+                'existingAnswer' => $existingAnswer,
             ])->render(),
         ]);
     }

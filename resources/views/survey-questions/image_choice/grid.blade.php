@@ -4,10 +4,6 @@
         @if ($question->is_required) <span class="text-danger">*</span> @endif
     </label>
 
-    @if (!empty($question->settings['help_text']))
-        <div class="text-muted small mb-2">{{ $question->settings['help_text'] }}</div>
-    @endif
-
     @php
         $multiple = $question->settings['multiple'] ?? false;
         $inputName = $multiple ? 'answer[]' : 'answer';
@@ -27,7 +23,10 @@
                            name="{{ $inputName }}"
                            value="{{ $value }}"
                            class="d-none image-choice-input"
-                           @if ($question->is_required && !$multiple) required @endif>
+                           @if ($question->is_required && !$multiple) required @endif
+                           @checked($multiple
+                               ? (is_array($existingAnswer ?? null) && in_array((string) $value, array_map('strval', $existingAnswer), true))
+                               : ((string) ($existingAnswer ?? '') === (string) $value))>
                     <div class="image-wrapper mb-2">
                         @if ($imageUrl)
                             <img src="{{ $imageUrl }}" alt="{{ $label }}" class="img-fluid rounded" style="height: 120px; object-fit: cover; width: 100%;">
@@ -52,6 +51,7 @@
 <script>
 document.querySelectorAll('.image-choice-card').forEach(card => {
     const input = card.querySelector('.image-choice-input');
+    if (input.checked) card.classList.add('border-primary', 'bg-primary-subtle');
     card.addEventListener('click', () => {
         if (input.type === 'radio') {
             document.querySelectorAll('.image-choice-card').forEach(c => c.classList.remove('border-primary', 'bg-primary-subtle'));

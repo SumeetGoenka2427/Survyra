@@ -6,6 +6,11 @@
     const responseUuid = app.dataset.responseUuid;
 
     function collectAnswer(form) {
+        const fileField = form.querySelector('input[type="file"][name="answer"]');
+        if (fileField) {
+            return fileField.files.length > 0 ? fileField.files[0] : null;
+        }
+
         const matrixInputs = form.querySelectorAll('[data-matrix-row]:checked');
         if (matrixInputs.length > 0) {
             const rows = {};
@@ -67,6 +72,36 @@
         updateRankingOrder(list);
     });
 
+    // File answers can't travel as JSON - posted as multipart instead. Every
+    // /answer call site shares this so file_upload questions work everywhere
+    // a regular answer would (submit, back, one-page autosave).
+    function postAnswer(questionId, answer) {
+        if (answer instanceof File) {
+            const formData = new FormData();
+            formData.append('response_uuid', responseUuid);
+            formData.append('question_id', questionId);
+            formData.append('answer', answer);
+
+            return fetch(`/s/${slug}/answer`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
+                credentials: 'same-origin',
+                body: formData,
+            });
+        }
+
+        return fetch(`/s/${slug}/answer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                Accept: 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ response_uuid: responseUuid, question_id: questionId, answer: answer }),
+        });
+    }
+
     function clearErrors(form) {
         form.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
         const existing = form.querySelector('.survey-error');
@@ -98,20 +133,7 @@
         submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
 
         try {
-            const response = await fetch(`/s/${slug}/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    Accept: 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    response_uuid: responseUuid,
-                    question_id: questionId,
-                    answer: answer,
-                }),
-            });
+            const response = await postAnswer(questionId, answer);
 
             if (response.status === 422) {
                 const data = await response.json();
@@ -148,20 +170,7 @@
 
         // Save current answer before going back
         try {
-            await fetch(`/s/${slug}/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    Accept: 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    response_uuid: responseUuid,
-                    question_id: questionId,
-                    answer: answer,
-                }),
-            });
+            await postAnswer(questionId, answer);
         } catch (e) {
             // Continue even if save fails - the back button should still work
         }
@@ -230,16 +239,7 @@
                 status.classList.remove('text-success', 'text-danger');
             }
 
-            fetch(`/s/${slug}/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    Accept: 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ response_uuid: responseUuid, question_id: questionId, answer: answer }),
-            })
+            postAnswer(questionId, answer)
                 .then(async (response) => {
                     if (response.status === 422) {
                         const data = await response.json();

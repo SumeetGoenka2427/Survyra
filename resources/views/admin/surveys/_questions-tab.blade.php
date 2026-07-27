@@ -72,7 +72,7 @@
                         :prefix="'sq-'.$question->id"
                         :question-types="$questionTypes"
                         :selected-type-id="$question->question_type_id"
-                        :options-text="implode(\"\n\", $question->options ?? [])"
+                        :options="$question->options ?? []"
                         :settings="$question->settings ?? []"
                     />
 

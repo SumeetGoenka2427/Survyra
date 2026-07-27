@@ -4,10 +4,6 @@
         @if ($question->is_required) <span class="text-danger">*</span> @endif
     </label>
 
-    @if (!empty($question->settings['help_text']))
-        <div class="text-muted small mb-2">{{ $question->settings['help_text'] }}</div>
-    @endif
-
     <div class="file-upload-wrapper">
         <div class="border-2 border-dashed rounded-3 p-4 text-center bg-light" style="border-style: dashed !important;">
             <i class="bi bi-cloud-upload fs-1 text-muted"></i>
@@ -19,8 +15,8 @@
             <input type="file"
                    name="answer"
                    class="form-control d-none file-input"
-                   accept="{{ implode(',', array_map(fn($t) => ".$t", $question->settings['allowed_types'] ?? ['pdf','doc','docx','jpg','png']))) }}"
-                   @if ($question->is_required) required @endif>
+                   accept="{{ implode(',', array_map(fn($t) => ".$t", $question->settings['allowed_types'] ?? ['pdf','doc','docx','jpg','png'])) }}"
+                   @if ($question->is_required && empty($existingAnswer ?? null)) required @endif>
             <button type="button" class="btn btn-outline-primary browse-btn">
                 <i class="bi bi-folder2-open me-1"></i> Browse Files
             </button>
@@ -31,6 +27,12 @@
                 </button>
             </div>
         </div>
+
+        @if (!empty($existingAnswer['original_name']))
+            <div class="text-muted small mt-2">
+                <i class="bi bi-paperclip"></i> Already uploaded: {{ $existingAnswer['original_name'] }} - choose a new file to replace it.
+            </div>
+        @endif
     </div>
 
     @error('answer')

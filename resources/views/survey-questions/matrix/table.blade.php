@@ -27,6 +27,7 @@
                                 data-matrix-row="{{ $rowIndex }}"
                                 autocomplete="off"
                                 @required($question->is_required)
+                                @checked((string) (is_array($existingAnswer ?? null) ? ($existingAnswer[$rowIndex] ?? null) : null) === (string) $col)
                             >
                         </td>
                     @endfor

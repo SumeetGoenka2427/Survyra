@@ -34,7 +34,7 @@
                     @foreach ($clients as $client)
                         <tr class="ds-fade-in">
                             <td>
-                                <a href="{{ route('admin.clients.edit', $client) }}" class="text-decoration-none fw-semibold">
+                                <a href="{{ route('admin.clients.analytics', $client) }}" class="text-decoration-none fw-semibold">
                                     {{ $client->company_name }}
                                 </a>
                             </td>
@@ -48,9 +48,6 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.clients.analytics', $client) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-graph-up"></i>
-                                </a>
                                 <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
                                 <button
                                     type="button"

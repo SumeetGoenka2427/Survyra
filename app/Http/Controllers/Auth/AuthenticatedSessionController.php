@@ -26,6 +26,10 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        if ($request->session()->has('2fa_user_id')) {
+            return redirect()->route('admin.two-factor.challenge');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('admin.dashboard', absolute: false));

@@ -63,6 +63,12 @@
                                 @csrf @method('PATCH')
                                 <button class="btn btn-sm btn-outline-secondary" title="Move down"><i class="bi bi-arrow-down"></i></button>
                             </form>
+                            <form action="{{ route('admin.templates.questions.duplicate', [$template, $question]) }}" method="POST">
+                                @csrf
+                                <button class="btn btn-sm btn-outline-secondary" title="Duplicate question">
+                                    <i class="bi bi-copy"></i>
+                                </button>
+                            </form>
                             <button type="button" class="btn btn-sm btn-outline-primary" @click="editing = !editing">Edit</button>
                             <form action="{{ route('admin.templates.questions.destroy', [$template, $question]) }}" method="POST" onsubmit="return confirm('Remove this question?');">
                                 @csrf @method('DELETE')
@@ -85,7 +91,7 @@
                                 :prefix="'q-'.$question->id"
                                 :question-types="$questionTypes"
                                 :selected-type-id="$question->question_type_id"
-                                :options-text="implode(\"\n\", $question->options ?? [])"
+                                :options="$question->options ?? []"
                                 :settings="$question->settings ?? []"
                             />
 

@@ -8,7 +8,11 @@
 <form id="answer-form" data-question-id="{{ $question->id }}">
     <h4 class="sq-label">{{ $question->question_text }}</h4>
 
-    @include($question->questionType->contract()->renderComponent($question->settings['display_style'] ?? 'default'), ['question' => $question])
+    @if (!empty($question->settings['help_text']))
+        <div class="text-muted small mb-2">{{ $question->settings['help_text'] }}</div>
+    @endif
+
+    @include($question->questionType->contract()->renderComponent($question->settings['display_style'] ?? 'default'), ['question' => $question, 'existingAnswer' => $existingAnswer ?? null])
 
     <div class="d-flex gap-2 mt-3">
         @if ($position > 1)

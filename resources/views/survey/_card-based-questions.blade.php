@@ -8,7 +8,11 @@
             <form data-question-id="{{ $question->id }}" class="one-page-answer-form">
                 <h5 class="sq-label">{{ $question->question_text }}</h5>
 
-                @include($question->questionType->contract()->renderComponent($question->settings['display_style'] ?? 'default'), ['question' => $question])
+                @if (!empty($question->settings['help_text']))
+                    <div class="text-muted small mb-2">{{ $question->settings['help_text'] }}</div>
+                @endif
+
+                @include($question->questionType->contract()->renderComponent($question->settings['display_style'] ?? 'default'), ['question' => $question, 'existingAnswer' => ($answers ?? [])[$question->id] ?? null])
 
                 <div class="small one-page-save-status" style="min-height: 1.2em;"></div>
             </form>

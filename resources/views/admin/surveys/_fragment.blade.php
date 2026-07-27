@@ -28,6 +28,10 @@
                         </div>
 
                         <div class="mt-auto d-flex flex-wrap gap-2">
+                            <a href="{{ route('admin.survey-preview', ['survey' => $survey->id]) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Preview
+                            </a>
+
                             <a href="{{ route('admin.surveys.edit', $survey) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>

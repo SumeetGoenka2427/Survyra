@@ -220,3 +220,21 @@ test('the template builder page lists the three new question types and can add a
     expect($question->options)->toBe(['Service', 'Price', 'Quality']);
     expect($question->settings['display_style'])->toBe('table');
 });
+
+test('a template question can be duplicated through the admin UI', function () {
+    $admin = newTypeAdmin();
+    $template = SurveyTemplate::factory()->create();
+    $matrixType = QuestionType::query()->where('key', 'matrix')->firstOrFail();
+    $question = $template->questions()->create([
+        'question_type_id' => $matrixType->id,
+        'question_text' => 'Rate these aspects',
+        'options' => ['Service', 'Price'],
+        'order' => 1,
+        'is_required' => true,
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('admin.templates.questions.duplicate', [$template, $question]));
+
+    $response->assertRedirect();
+    expect($template->fresh()->questions()->where('question_text', 'Rate these aspects')->count())->toBe(2);
+});

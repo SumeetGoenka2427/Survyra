@@ -38,8 +38,10 @@
 
             <div id="survey-app" data-response-uuid="{{ $response->uuid }}" data-slug="{{ $survey->slug }}" data-layout="conversational">
                 <div id="survey-app-content">
-                    @if ($question)
-                        @include('survey._question-frame-conversational', ['question' => $question, 'position' => $position, 'survey' => $survey])
+                    @if (!empty($showWelcome))
+                        @include('survey._welcome', ['survey' => $survey])
+                    @elseif ($question)
+                        @include('survey._question-frame-conversational', ['question' => $question, 'position' => $position, 'survey' => $survey, 'existingAnswer' => $existingAnswer ?? null])
                     @else
                         @include('survey._thankyou-frame', ['rule' => $rule, 'survey' => $survey, 'response' => $response])
                     @endif
@@ -57,12 +59,14 @@
             <div class="card border-0 shadow-sm survey-card">
                 <div class="card-body p-4" id="survey-app" data-response-uuid="{{ $response->uuid }}" data-slug="{{ $survey->slug }}" data-layout="{{ $survey->layout }}">
                     <div id="survey-app-content">
-                        @if ($isAllQuestionsLayout && $response->status !== 'completed')
+                        @if (!empty($showWelcome))
+                            @include('survey._welcome', ['survey' => $survey])
+                        @elseif ($isAllQuestionsLayout && $response->status !== 'completed')
                             @include($allQuestionsView, ['survey' => $survey, 'response' => $response, 'questions' => $questions])
                         @elseif ($survey->layout === 'section_wizard' && $response->status !== 'completed')
                             @include('survey._section-questions', array_merge(['survey' => $survey, 'response' => $response], $section))
                         @elseif ($question)
-                            @include('survey._question-frame', ['question' => $question, 'position' => $position, 'survey' => $survey])
+                            @include('survey._question-frame', ['question' => $question, 'position' => $position, 'survey' => $survey, 'existingAnswer' => $existingAnswer ?? null])
                         @else
                             @include('survey._thankyou-frame', ['rule' => $rule, 'survey' => $survey, 'response' => $response])
                         @endif

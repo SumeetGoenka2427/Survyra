@@ -22,7 +22,7 @@
                 @foreach ($recentClients as $client)
                     <tr class="ds-fade-in">
                         <td>
-                            <a href="{{ route('admin.clients.edit', $client) }}" class="text-decoration-none fw-semibold">
+                            <a href="{{ route('admin.clients.analytics', $client) }}" class="text-decoration-none fw-semibold">
                                 {{ $client->company_name }}
                             </a>
                         </td>

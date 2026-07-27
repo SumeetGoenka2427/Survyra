@@ -6,6 +6,7 @@
         data-response-show-url-template="{{ route('admin.analytics.responses.show', ['response' => '__ID__']) }}"
         data-reports-url="{{ route('admin.analytics.reports.index') }}"
         data-export-url-template="{{ route('admin.analytics.export', ['format' => '__FORMAT__']) }}"
+        data-poll-url-template="{{ route('admin.analytics.poll', ['survey' => '__SURVEY__']) }}"
     >
         @include('analytics.filters', [
             'clients' => $clients,
@@ -28,15 +29,24 @@
 
         <div data-analytics-pane="dashboard">
             <div class="row g-3 mb-4">
-                <div class="col-lg-8">
+                <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white"><strong>Response Volume</strong></div>
+                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                            <strong><i class="bi bi-graph-up me-2 text-primary"></i>Response Trend</strong>
+                            <span class="badge bg-light text-dark">Daily</span>
+                        </div>
                         <div class="card-body"><div id="analytics-trend-chart"></div></div>
                     </div>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white"><strong>Sentiment</strong></div>
+                        <div class="card-header bg-transparent"><strong><i class="bi bi-bar-chart me-2 text-primary"></i>Weekly Volume</strong></div>
+                        <div class="card-body"><div id="analytics-weekly-chart"></div></div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent"><strong><i class="bi bi-emoji-smile me-2 text-primary"></i>Sentiment</strong></div>
                         <div class="card-body"><div id="analytics-sentiment-chart"></div></div>
                     </div>
                 </div>
@@ -44,7 +54,7 @@
 
             <div id="analytics-dashboard-fragment">
                 @if ($snapshot)
-                    @include('analytics.dashboard', ['snapshot' => $snapshot])
+                    @include('analytics.dashboard', ['snapshot' => $snapshot, 'survey' => $survey])
                 @else
                     <div class="text-center text-muted py-5">No client selected.</div>
                 @endif
@@ -52,6 +62,15 @@
         </div>
 
         <div data-analytics-pane="responses" class="d-none">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <input type="search" id="responses-search" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Search survey, contact, source…">
+                <select id="responses-status" class="form-select form-select-sm" style="max-width: 170px;">
+                    <option value="">All statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="abandoned">Abandoned</option>
+                    <option value="pending">In progress</option>
+                </select>
+            </div>
             <div id="analytics-responses-fragment">
                 <div class="text-center text-muted py-5">
                     <div class="spinner-border spinner-border-sm"></div> Loading…
@@ -76,6 +95,7 @@
         @php
             $chartSeed = [
                 'trend' => $snapshot['trend'] ?? ['labels' => [], 'series' => []],
+                'weekly_trend' => $snapshot['weekly_trend'] ?? ['labels' => [], 'series' => []],
                 'sentiment' => $snapshot['sentiment_counts'] ?? ['positive' => 0, 'neutral' => 0, 'negative' => 0],
             ];
         @endphp

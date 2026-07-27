@@ -89,6 +89,20 @@ class SurveyTemplateService
         $question->delete();
     }
 
+    public function duplicateQuestion(SurveyTemplateQuestion $question): SurveyTemplateQuestion
+    {
+        $template = $question->template;
+
+        return $template->questions()->create([
+            'question_type_id' => $question->question_type_id,
+            'question_text' => $question->question_text,
+            'options' => $question->options,
+            'settings' => $question->settings,
+            'order' => $template->questions()->max('order') + 1,
+            'is_required' => $question->is_required,
+        ]);
+    }
+
     public function moveQuestionUp(SurveyTemplateQuestion $question): void
     {
         $this->moveOrderUp($question, 'survey_template_id');

@@ -41,6 +41,19 @@ function buildTemplateWithQuestions(): SurveyTemplate
     return $template;
 }
 
+test('the surveys list shows a preview link that opens the survey preview in a new tab', function () {
+    $admin = makeSurveyBuilderAdmin();
+    $client = Client::factory()->create();
+    $template = buildTemplateWithQuestions();
+    $survey = app(SurveyService::class)->createFromTemplate($client, $template, 'Preview Link Survey', $admin->id);
+
+    $response = $this->actingAs($admin)->get(route('admin.surveys.index'));
+
+    $response->assertOk();
+    $response->assertSee(route('admin.survey-preview', ['survey' => $survey->id]), false);
+    $response->assertSee('target="_blank"', false);
+});
+
 test('creating a survey from a template clones every question', function () {
     $admin = makeSurveyBuilderAdmin();
     $client = Client::factory()->create();
@@ -114,6 +127,29 @@ test('publishing requires at least one question', function () {
 
     expect(fn () => app(SurveyService::class)->publish($survey->fresh()))
         ->toThrow(InvalidArgumentException::class);
+});
+
+test('publishing an empty survey through the admin UI shows a friendly validation error, not a 500', function () {
+    $admin = makeSurveyBuilderAdmin();
+    $client = Client::factory()->create();
+    $survey = app(SurveyService::class)->createBlank($client, 'Empty Survey', 'multi_step', $admin->id);
+
+    $response = $this->actingAs($admin)->post(route('admin.surveys.publish', $survey));
+
+    $response->assertRedirect();
+    $response->assertSessionHasErrors('survey');
+    expect($survey->fresh()->status)->toBe('draft');
+});
+
+test('publishing an empty survey through the AJAX endpoint returns a 422 with a message, not a 500', function () {
+    $admin = makeSurveyBuilderAdmin();
+    $client = Client::factory()->create();
+    $survey = app(SurveyService::class)->createBlank($client, 'Empty Survey', 'multi_step', $admin->id);
+
+    $response = $this->actingAs($admin)->postJson(route('admin.surveys.publish', $survey));
+
+    $response->assertStatus(422);
+    $response->assertJsonStructure(['message']);
 });
 
 test('publishing a valid survey sets status published_at and an 8 character slug', function () {

@@ -24,6 +24,16 @@
         --survey-accent: #f59e0b;
     }
     body { background: var(--survey-bg); font-family: var(--survey-font); color: var(--survey-text); }
+    /* Bootstrap 5.3 headings use --bs-heading-color (defaults away from
+       `inherit`), so h1-h6 (including .sq-label, the question title) would
+       otherwise ignore the theme's text color entirely - on a dark
+       background this silently renders the question almost illegible
+       instead of just "the wrong shade". */
+    h1, h2, h3, h4, h5, h6, .sq-label { color: var(--survey-text); }
+    /* Same problem, different Bootstrap utility: .text-muted carries its own
+       fixed gray via --bs-secondary-color rather than following the theme,
+       which is illegible on a dark theme's background. */
+    .text-muted { color: var(--survey-muted) !important; }
     .btn-survyra-primary { background: var(--survey-primary); color: #fff; border-radius: var(--survey-btn-radius); border: none; }
     .btn-survyra-primary:hover { background: var(--survey-primary); opacity: 0.9; color: #fff; }
     .survey-card { border-radius: var(--survey-radius); }

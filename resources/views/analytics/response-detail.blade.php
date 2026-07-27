@@ -22,7 +22,11 @@
             <li class="list-group-item">
                 <div class="fw-semibold small mb-1">{{ $answer->question->question_text }}</div>
                 <div>
-                    @if (is_array($answer->answer))
+                    @if ($answer->question->questionType->key === 'file_upload' && is_array($answer->answer) && isset($answer->answer['upload_id']))
+                        <a href="{{ route('admin.analytics.uploads.download', $answer->answer['upload_id']) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-download"></i> {{ $answer->answer['original_name'] }}
+                        </a>
+                    @elseif (is_array($answer->answer))
                         {{ implode(', ', $answer->answer) }}
                     @else
                         {{ $answer->answer }}

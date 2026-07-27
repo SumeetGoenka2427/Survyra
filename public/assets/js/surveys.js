@@ -44,7 +44,11 @@
 
         const publishButton = event.target.closest('[data-survey-publish]');
         if (publishButton) {
-            jsonFetch(publishButton.dataset.url, { method: 'POST' }).then(({ data }) => {
+            jsonFetch(publishButton.dataset.url, { method: 'POST' }).then(({ ok, data }) => {
+                if (!ok) {
+                    Toast.error(data.message || 'Could not publish this survey.');
+                    return;
+                }
                 fragment.innerHTML = data.html;
                 Toast.success('Survey published.');
             });
@@ -55,7 +59,11 @@
         if (archiveButton) {
             if (!confirm('Archive this survey? It will stop being editable as a draft.')) return;
 
-            jsonFetch(archiveButton.dataset.url, { method: 'POST' }).then(({ data }) => {
+            jsonFetch(archiveButton.dataset.url, { method: 'POST' }).then(({ ok, data }) => {
+                if (!ok) {
+                    Toast.error(data.message || 'Could not archive this survey.');
+                    return;
+                }
                 fragment.innerHTML = data.html;
                 Toast.success('Survey archived.');
             });

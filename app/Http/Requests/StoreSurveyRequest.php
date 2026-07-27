@@ -18,6 +18,8 @@ class StoreSurveyRequest extends FormRequest
             'client_id' => ['required', 'exists:clients,id'],
             'title' => ['required', 'string', 'max:255'],
             'mode' => ['required', 'in:template,blank'],
+            'ai_questions' => ['nullable', 'string'],
+            'theme_id' => ['nullable', 'exists:survey_themes,id'],
         ];
 
         if ($this->input('mode') === 'template') {

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Survey;
 use App\Services\AnalyticsService;
-use App\Services\OnboardingService;
 use App\Services\ReportExportService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +18,6 @@ class AnalyticsController extends Controller
     public function __construct(
         private readonly AnalyticsService $analytics,
         private readonly ReportExportService $exporter,
-        private readonly OnboardingService $onboarding,
     ) {}
 
     public function index(Request $request): View
@@ -35,7 +33,6 @@ class AnalyticsController extends Controller
             'from' => $from,
             'to' => $to,
             'snapshot' => $this->analytics->forClient($client, $survey, $from, $to),
-            'onboarding' => $this->onboarding->getChecklist($request->user()),
         ]);
     }
 

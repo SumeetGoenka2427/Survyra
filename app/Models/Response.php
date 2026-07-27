@@ -86,4 +86,12 @@ class Response extends Model
     {
         return $this->hasMany(ResponseAnswer::class);
     }
+
+    /**
+     * @return HasMany<ResponseUpload, $this>
+     */
+    public function uploads(): HasMany
+    {
+        return $this->hasMany(ResponseUpload::class);
+    }
 }

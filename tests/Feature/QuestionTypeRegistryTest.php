@@ -8,7 +8,7 @@ test('every configured question type resolves to a class implementing the contra
 
     $keys = array_keys(config('question_types'));
 
-    expect($keys)->toHaveCount(18);
+    expect($keys)->toHaveCount(20);
 
     foreach ($keys as $key) {
         expect($registry->resolve($key))->toBeInstanceOf(QuestionTypeContract::class);

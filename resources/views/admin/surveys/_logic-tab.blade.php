@@ -18,7 +18,7 @@
 
 <div class="list-group list-group-flush mb-4">
     @forelse ($survey->logicRules as $rule)
-        <div class="list-group-item">
+        <div class="list-group-item" x-data="{ editing: false }">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <strong>IF</strong>
@@ -37,9 +37,29 @@
                         {{ $rule->action }} "{{ $rule->targetQuestion?->question_text ?? '?' }}"
                     @endif
                 </div>
-                <form action="{{ route('admin.surveys.logic-rules.destroy', [$survey, $rule]) }}" method="POST" onsubmit="return confirm('Remove this rule?');">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                <div class="d-flex gap-1 flex-shrink-0">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @click="editing = !editing">Edit</button>
+                    <form action="{{ route('admin.surveys.logic-rules.destroy', [$survey, $rule]) }}" method="POST" onsubmit="return confirm('Remove this rule?');">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+
+            <div x-show="editing" class="mt-3 border-top pt-3">
+                <form method="POST" action="{{ route('admin.surveys.logic-rules.update', [$survey, $rule]) }}">
+                    @csrf
+                    @method('PUT')
+
+                    <x-logic-rule-fields
+                        :questions="$survey->questions"
+                        :initial-conditions="$rule->conditions"
+                        :initial-action="$rule->action"
+                        :initial-condition-operator="$rule->condition_operator ?? 'AND'"
+                        :initial-target-question-id="$rule->target_question_id"
+                    />
+
+                    <button type="submit" class="btn btn-primary btn-sm mt-3">Save Rule</button>
                 </form>
             </div>
         </div>
@@ -51,77 +71,10 @@
 <div class="card border-0 bg-light">
     <div class="card-body">
         <h6 class="mb-3">Add Logic Rule</h6>
-        <form
-            method="POST"
-            action="{{ route('admin.surveys.logic-rules.store', $survey) }}"
-            x-data="{ conditions: [{ question_id: '', operator: 'equals', value: '' }], action: 'show', conditionOperator: 'AND' }"
-        >
+        <form method="POST" action="{{ route('admin.surveys.logic-rules.store', $survey) }}">
             @csrf
 
-            <template x-for="(condition, index) in conditions" :key="index">
-                <div class="row g-2 mb-2 align-items-center">
-                    <div class="col-auto" x-show="index > 0">
-                        <select x-model="conditionOperator" name="condition_operator" class="form-select form-select-sm" style="width:80px;">
-                            <option value="AND">AND</option>
-                            <option value="OR">OR</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <select :name="`conditions[${index}][question_id]`" class="form-select" x-model="condition.question_id" required>
-                            <option value="">IF question...</option>
-                            @foreach ($survey->questions as $q)
-                                <option value="{{ $q->id }}">{{ $q->question_text }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <select :name="`conditions[${index}][operator]`" class="form-select" x-model="condition.operator">
-                            <option value="equals">equals</option>
-                            <option value="not_equals">does not equal</option>
-                            <option value="contains">contains</option>
-                            <option value="greater_than">is greater than</option>
-                            <option value="less_than">is less than</option>
-                            <option value="is_empty">is empty</option>
-                            <option value="is_not_empty">is not empty</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3" x-show="condition.operator !== 'is_empty' && condition.operator !== 'is_not_empty'">
-                        <input type="text" :name="`conditions[${index}][value]`" class="form-control" placeholder="value" x-model="condition.value">
-                    </div>
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-sm btn-outline-danger" @click="conditions.length > 1 && conditions.splice(index, 1)">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
-                </div>
-            </template>
-
-            <input type="hidden" name="condition_operator" :value="conditionOperator">
-
-            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" @click="conditions.push({ question_id: '', operator: 'equals', value: '' })">
-                <i class="bi bi-plus"></i> Add condition
-            </button>
-
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <label class="form-label">Then</label>
-                    <select name="action" class="form-select" x-model="action" required>
-                        <option value="show">Show question</option>
-                        <option value="hide">Hide question</option>
-                        <option value="jump_to_question">Jump to question</option>
-                        <option value="end_survey">End survey</option>
-                    </select>
-                </div>
-                <div class="col-md-8" x-show="action !== 'end_survey'">
-                    <label class="form-label">Target question</label>
-                    <select name="target_question_id" class="form-select">
-                        <option value="">Select question...</option>
-                        @foreach ($survey->questions as $q)
-                            <option value="{{ $q->id }}">{{ $q->question_text }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
+            <x-logic-rule-fields :questions="$survey->questions" />
 
             <button type="submit" class="btn btn-primary mt-3">Add Rule</button>
         </form>
