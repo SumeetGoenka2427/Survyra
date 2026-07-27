@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        // Digits only, with country code, e.g. 919876543210. Leave unset to hide the
+        // public site's floating WhatsApp button until a real business number exists.
+        'number' => env('WHATSAPP_NUMBER'),
+    ],
+
+    'analytics' => [
+        // GA4 measurement ID, e.g. G-XXXXXXXXXX. Leave unset to skip loading
+        // Google Analytics on the public site until a real property exists.
+        'ga_measurement_id' => env('GA_MEASUREMENT_ID'),
+    ],
+
 ];

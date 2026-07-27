@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\QrCodeController;
 use App\Http\Controllers\Admin\ReportController;
@@ -67,6 +68,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('clients/{client}/analytics/export/{format}', [ClientAnalyticsController::class, 'export'])->name('clients.analytics.export');
 
             Route::get('audit-log', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-log.index');
+
+            Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
+            Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.update-status');
         });
 
         Route::middleware('permission:manage-surveys')->group(function () {

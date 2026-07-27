@@ -1,0 +1,19 @@
+# Safety net for shared hosting where the document root points at the
+# repository root instead of /public (e.g. Hostinger hPanel Git deploying
+# straight into public_html without a custom document-root option).
+#
+# If your hPanel plan lets you set the document root to this repo's
+# `public/` folder directly, this file is simply unused and harmless.
+
+# Block direct access to everything except the public/ folder.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(app|bootstrap|config|database|lang|resources|routes|storage|tests|vendor)/ - [F,L]
+    RewriteRule ^(\.env|\.env\..*|composer\.json|composer\.lock|artisan|package\.json|phpunit\.xml)$ - [F,L]
+
+    # Send everything else into public/, then let Laravel's own
+    # public/.htaccess take over from there.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

@@ -69,6 +69,11 @@
                             <i class="bi bi-buildings"></i> <span class="ds-sidebar-label">Clients</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.leads.index') }}" class="nav-link {{ request()->routeIs('admin.leads.*') ? 'active' : '' }}" title="Leads">
+                            <i class="bi bi-person-lines-fill"></i> <span class="ds-sidebar-label">Leads</span>
+                        </a>
+                    </li>
                     @can('viewAuditLog', \App\Models\User::class)
                     <li class="nav-item">
                         <a href="{{ route('admin.audit-log.index') }}" class="nav-link {{ request()->routeIs('admin.audit-log.*') ? 'active' : '' }}" title="Audit Log">
