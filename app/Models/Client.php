@@ -148,6 +148,14 @@ class Client extends Model
         return $this->hasMany(Report::class);
     }
 
+    /**
+     * @return HasMany<Website, $this>
+     */
+    public function websites(): HasMany
+    {
+        return $this->hasMany(Website::class);
+    }
+
     public function getSlackWebhookUrl(): ?string
     {
         return \App\Models\Setting::where('client_id', $this->id)

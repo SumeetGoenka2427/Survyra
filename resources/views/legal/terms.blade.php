@@ -1,7 +1,7 @@
 <x-public-layout title="Terms of Service">
     <nav class="navbar navbar-expand-lg sv-navbar py-3">
         <div class="container">
-            <a class="navbar-brand sv-brand" href="{{ route('home') }}">Survyra</a>
+            <a class="navbar-brand p-0" href="{{ route('home') }}"><x-brand-mark /></a>
             <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Home</a>
         </div>
     </nav>
@@ -12,10 +12,10 @@
             <div class="alert alert-warning">
                 This is a placeholder policy for early-stage use. It should be reviewed and finalized by a qualified professional before Survyra is offered under a formal commercial agreement.
             </div>
-            <p class="text-muted-2">These terms describe, in general terms, the basis on which Survyra provides website, customer feedback and review-growth services to businesses.</p>
+            <p class="text-muted-2">These terms describe, in general terms, the basis on which Survyra provides customer survey, feedback and review-growth services to businesses.</p>
 
             <h2 class="h5 mt-4">Service Plans</h2>
-            <p class="text-muted-2">Survyra plans are billed monthly as described on our <a href="{{ route('home') }}#pricing">pricing page</a>. Website setup and basic monthly updates are included per plan; major redesigns, additional functionality and custom development are quoted separately.</p>
+            <p class="text-muted-2">Survyra plans are billed monthly as described on our <a href="{{ route('home') }}#pricing">pricing page</a>. Survey setup and configuration is included per plan; custom integrations and additional functionality are quoted separately.</p>
 
             <h2 class="h5 mt-4">Trials</h2>
             <p class="text-muted-2">Where offered, trials run for a fixed period stated at the time of signup and do not renew automatically into a paid plan without agreement.</p>

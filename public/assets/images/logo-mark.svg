@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="svLogoTitle">
+    <title id="svLogoTitle">Survyra</title>
+    <defs>
+        <linearGradient id="svLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1E3A5F"/>
+            <stop offset="100%" stop-color="#142943"/>
+        </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="64" height="64" rx="14" ry="14" fill="url(#svLogoGradient)"/>
+    <polygon points="32,18.43 35.82,28.17 46.27,28.8 38.18,35.44 40.82,45.57 32,39.93 23.18,45.57 25.82,35.44 17.73,28.8 28.18,28.17" fill="#F2A93B"/>
+</svg>

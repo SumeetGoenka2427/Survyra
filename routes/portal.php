@@ -76,6 +76,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
         // Onboarding
         Route::post('onboarding/dismiss', [OnboardingController::class, 'dismiss'])->name('onboarding.dismiss');
+
+        // Website builder is disabled while Survyra is survey-only (controllers kept for future use).
     });
 });
 

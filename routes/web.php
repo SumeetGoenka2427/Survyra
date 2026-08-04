@@ -34,4 +34,5 @@ Route::get('/robots.txt', function () {
 require __DIR__.'/admin.php';
 require __DIR__.'/portal.php';
 require __DIR__.'/survey.php';
+// Website builder is disabled while Survyra is survey-only (routes/website.php kept for future use).
 require __DIR__.'/api.php';

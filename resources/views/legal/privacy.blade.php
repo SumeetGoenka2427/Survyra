@@ -1,7 +1,7 @@
 <x-public-layout title="Privacy Policy">
     <nav class="navbar navbar-expand-lg sv-navbar py-3">
         <div class="container">
-            <a class="navbar-brand sv-brand" href="{{ route('home') }}">Survyra</a>
+            <a class="navbar-brand p-0" href="{{ route('home') }}"><x-brand-mark /></a>
             <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Home</a>
         </div>
     </nav>
@@ -12,7 +12,7 @@
             <div class="alert alert-warning">
                 This is a placeholder policy for early-stage use. It should be reviewed and finalized by a qualified professional before Survyra collects real customer or business data at scale.
             </div>
-            <p class="text-muted-2">Survyra ("we", "us") provides website, customer feedback and review-growth services for small businesses. This page describes, in general terms, how we handle information submitted through this site and our products.</p>
+            <p class="text-muted-2">Survyra ("we", "us") provides customer survey, feedback and review-growth services for small businesses. This page describes, in general terms, how we handle information submitted through this site and our products.</p>
 
             <h2 class="h5 mt-4">Information We Collect</h2>
             <p class="text-muted-2">When you request a demo, we collect the details you submit &mdash; your name, business name, business type, phone number, email address and any message you include. When a business uses Survyra's survey and feedback tools, customer responses are collected as configured by that business.</p>

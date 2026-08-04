@@ -70,6 +70,22 @@ class UsageService
     }
 
     /**
+     * Check if the client can create a new website. Counts all websites
+     * regardless of status (draft or published) - "one website" is the
+     * natural plan unit, so unlimited hoarded drafts would defeat the cap.
+     */
+    public function canCreateWebsite(Client $client): bool
+    {
+        $plan = $this->subscriptions->activePlan($client);
+
+        if (! $plan || ! $plan->max_websites) {
+            return true; // unlimited
+        }
+
+        return $client->websites()->count() < $plan->max_websites;
+    }
+
+    /**
      * Get usage statistics for the client.
      *
      * @return array<string, mixed>

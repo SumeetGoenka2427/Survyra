@@ -17,6 +17,56 @@
         }
     }
 
+    // Scroll-spy: highlight the nav link for whichever linked section is in view.
+    const navLinks = document.querySelectorAll('.sv-navbar .nav-link[href^="#"]');
+    if (navLinks.length && 'IntersectionObserver' in window) {
+        const sectionsById = new Map();
+        navLinks.forEach((link) => {
+            const section = document.querySelector(link.getAttribute('href'));
+            if (section) sectionsById.set(section, link);
+        });
+
+        if (sectionsById.size) {
+            const navObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    const link = sectionsById.get(entry.target);
+                    if (!link) return;
+                    if (entry.isIntersecting) {
+                        navLinks.forEach((l) => l.classList.remove('active'));
+                        link.classList.add('active');
+                    }
+                });
+            }, { rootMargin: '-40% 0px -55% 0px' });
+            sectionsById.forEach((_, section) => navObserver.observe(section));
+        }
+    }
+
+    // Mobile sticky CTA: appears once the hero has been scrolled past, hides
+    // again once the visitor reaches the demo form (it would be redundant there).
+    const stickyCta = document.querySelector('[data-sticky-cta]');
+    const hero = document.querySelector('.sv-hero');
+    const demoSection = document.getElementById('demo');
+    if (stickyCta && hero && 'IntersectionObserver' in window) {
+        let heroVisible = true;
+        let demoVisible = false;
+
+        const updateStickyCta = () => {
+            stickyCta.classList.toggle('is-visible', !heroVisible && !demoVisible);
+        };
+
+        new IntersectionObserver((entries) => {
+            entries.forEach((entry) => { heroVisible = entry.isIntersecting; });
+            updateStickyCta();
+        }).observe(hero);
+
+        if (demoSection) {
+            new IntersectionObserver((entries) => {
+                entries.forEach((entry) => { demoVisible = entry.isIntersecting; });
+                updateStickyCta();
+            }).observe(demoSection);
+        }
+    }
+
     // Interactive "Try It Yourself" demo widget.
     const demoFrame = document.querySelector('[data-demo-widget]');
     if (!demoFrame) return;

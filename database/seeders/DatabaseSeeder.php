@@ -18,7 +18,11 @@ class DatabaseSeeder extends Seeder
             QuestionTypeSeeder::class,
             SurveyThemeSeeder::class,
             SurveyTemplateSeeder::class,
+            SectionTypeSeeder::class,
+            WebsiteThemeSeeder::class,
+            WebsiteTemplateSeeder::class,
             DemoClientsSeeder::class,
+            WebsiteDemoSeeder::class,
         ]);
     }
 }

@@ -11,7 +11,7 @@ class Lead extends Model
 
     public const STATUSES = ['new', 'contacted', 'demo', 'trial', 'won', 'lost'];
     public const PREFERRED_CONTACTS = ['whatsapp', 'phone', 'email'];
-    public const INTERESTS = ['website', 'feedback', 'reviews', 'complete'];
+    public const INTERESTS = ['surveys', 'feedback', 'reviews', 'analytics'];
 
     protected $fillable = [
         'name',

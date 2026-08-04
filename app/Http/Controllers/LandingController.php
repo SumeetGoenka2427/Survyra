@@ -8,62 +8,12 @@ class LandingController extends Controller
 {
     public function index(): View
     {
-        $businessSitePrice = 7999;
-        $growthPrice = 1999;
-        $completePrice = 2999;
-        $completeFoundingPrice = 1999;
-
         return view('landing.index', [
-            'websitePlans' => [
-                [
-                    'name' => 'Starter Site',
-                    'price' => 4999,
-                    'priceLabel' => null,
-                    'tagline' => '3-4 pages to get your business online.',
-                    'highlighted' => false,
-                    'features' => [
-                        '3-4 page mobile-responsive website',
-                        'Domain + hosting for Year 1 included',
-                        'WhatsApp / contact integration',
-                        'Basic on-page SEO',
-                        'Delivered in 5-7 days',
-                    ],
-                    'renewal' => 'Renews at ~₹1,999/year from Year 2',
-                ],
-                [
-                    'name' => 'Business Site',
-                    'price' => $businessSitePrice,
-                    'priceLabel' => null,
-                    'tagline' => '7-9 page dynamic site with an admin panel.',
-                    'highlighted' => true,
-                    'features' => [
-                        'Everything in Starter Site',
-                        '7-9 pages, dynamic content',
-                        'Admin panel to edit content yourself',
-                        'Domain + hosting for Year 1 included',
-                        'Delivered in 7-10 days',
-                    ],
-                    'renewal' => 'Renews at ~₹2,499/year from Year 2',
-                ],
-                [
-                    'name' => 'Custom',
-                    'price' => null,
-                    'priceLabel' => 'From ₹14,999',
-                    'tagline' => 'Fully custom design and features.',
-                    'highlighted' => false,
-                    'features' => [
-                        'Fully custom design',
-                        'E-commerce, booking or other custom features',
-                        'Scoped after a discovery call',
-                    ],
-                    'renewal' => null,
-                ],
-            ],
             'feedbackPlans' => [
                 [
-                    'name' => 'Feedback Basic',
+                    'name' => 'Starter',
                     'price' => 999,
-                    'tagline' => 'For businesses who already have a website.',
+                    'tagline' => 'Everything you need to start collecting feedback.',
                     'highlighted' => false,
                     'features' => [
                         'QR code + survey link',
@@ -73,29 +23,16 @@ class LandingController extends Controller
                 ],
                 [
                     'name' => 'Growth',
-                    'price' => $growthPrice,
+                    'price' => 1999,
                     'tagline' => 'Unlimited feedback, plus review growth.',
                     'highlighted' => true,
                     'features' => [
-                        'Everything in Feedback Basic',
+                        'Everything in Starter',
                         'Unlimited responses',
                         'Review-growth funnel',
                         'Monthly feedback report',
                         'WhatsApp feedback requests',
                     ],
-                ],
-            ],
-            'completePlan' => [
-                'name' => 'Complete',
-                'price' => $completePrice,
-                'foundingPrice' => $completeFoundingPrice,
-                'tagline' => 'Website + full feedback & review system, one monthly plan.',
-                'features' => [
-                    'Business Site (7-9 pages), maintained monthly',
-                    'Custom domain + hosting included',
-                    'Everything in Growth (unlimited responses, review funnel, monthly report, WhatsApp requests)',
-                    'Basic SEO',
-                    'Ongoing monthly website updates',
                 ],
             ],
             'businessTypes' => [
@@ -109,43 +46,43 @@ class LandingController extends Controller
             'faqs' => [
                 [
                     'q' => 'What is Survyra?',
-                    'a' => 'Survyra is a customer feedback and review-growth platform for small businesses. It combines customer surveys, QR feedback, review requests, analytics and a professional business website.',
+                    'a' => 'Survyra is customer survey software for small businesses. It combines a smart survey builder, QR and link feedback, review growth and analytics in one simple dashboard.',
                 ],
                 [
-                    'q' => 'How does the customer survey work?',
-                    'a' => 'Customers scan a QR code or open a survey link, answer a few questions and submit their feedback from their phone.',
+                    'q' => 'What are the benefits of using customer surveys?',
+                    'a' => 'Customer surveys replace guesswork with real data. They help you catch unhappy customers before they leave a bad review, spot recurring problems early, track satisfaction over time, and identify your happiest customers at the exact moment to ask for a public review.',
+                ],
+                [
+                    'q' => 'How does the customer survey process work?',
+                    'a' => 'A customer scans a QR code or opens a survey link, answers a short survey from their phone, and their response lands instantly in your dashboard. Happy customers are guided toward a public review; unhappy ones are routed straight to you so you can follow up.',
                 ],
                 [
                     'q' => 'Do I need an app?',
                     'a' => 'No. Customers can complete surveys directly from their mobile browser, and business owners view results from a web dashboard.',
                 ],
                 [
-                    'q' => 'Can I use my own domain?',
-                    'a' => 'Yes. Every website plan, and the Complete plan, includes a custom domain and hosting for the first year. Feedback Basic and Growth plans assume you already have a website and domain in place.',
-                ],
-                [
-                    'q' => 'Is a website included?',
-                    'a' => 'A website can be purchased as its own one-time plan (from ₹4,999), or bundled into the monthly Complete plan alongside feedback and review tools. The Feedback Basic and Growth plans don\'t include a website — they\'re designed for businesses that already have one.',
+                    'q' => 'What kinds of survey questions can I create?',
+                    'a' => 'Surveys are built around your business — choose from multiple question types (ratings, multiple choice, open text and more) and add branching logic so the next question adapts to how a customer just answered.',
                 ],
                 [
                     'q' => 'Can I collect negative feedback privately?',
                     'a' => 'Yes. Businesses can offer a private feedback path so concerns can be captured and addressed directly, alongside an easy path for happy customers to share their experience publicly.',
                 ],
                 [
-                    'q' => 'Can I see survey results?',
-                    'a' => 'Yes. Business owners can view ratings, feedback and survey analytics from their dashboard.',
+                    'q' => 'Can I see and export my survey results?',
+                    'a' => 'Yes. Business owners can view ratings, feedback and survey analytics from their dashboard, and export reports to PDF, Excel or CSV whenever they need them.',
                 ],
                 [
                     'q' => 'Can I use a QR code?',
                     'a' => 'Yes. Each survey can be shared through QR codes, links and supported messaging channels like WhatsApp.',
                 ],
                 [
-                    'q' => 'How quickly can my website go live?',
-                    'a' => 'Standard websites can typically be prepared within about a week after we receive your business information and content.',
+                    'q' => 'How quickly can I start collecting feedback?',
+                    'a' => 'Most businesses are set up and collecting their first survey responses within a day of signing up.',
                 ],
                 [
                     'q' => 'How much does Survyra cost?',
-                    'a' => 'Websites start at ₹4,999 as a one-time payment. Feedback and review-growth plans start at ₹999/month for businesses that already have a website. Or get everything in one monthly plan (Complete) at ₹2,999/month — with a limited Founding Client rate of ₹1,999/month for the first 10 businesses.',
+                    'a' => 'Starter plans begin at ₹999/month for QR survey feedback and a feedback dashboard. Growth, at ₹1,999/month, adds unlimited responses, review-growth tools and WhatsApp feedback requests.',
                 ],
                 [
                     'q' => 'What is customer feedback software?',
@@ -153,19 +90,19 @@ class LandingController extends Controller
                 ],
                 [
                     'q' => 'How can a small business get more customer reviews?',
-                    'a' => 'A business can make review requests easy to access after a customer interaction, such as through QR codes, links or follow-up messages, while using feedback to identify areas for improvement first.',
+                    'a' => 'A business can make review requests easy to access after a customer interaction, such as through QR codes, links or follow-up messages, while using survey feedback to identify areas for improvement first.',
                 ],
                 [
                     'q' => 'How can restaurants collect customer feedback?',
-                    'a' => 'Restaurants and cafes typically place a QR code on the table, receipt or counter so customers can share feedback about their visit right after paying.',
+                    'a' => 'Restaurants and cafes typically place a QR code on the table, receipt or counter so customers can complete a short survey about their visit right after paying.',
                 ],
                 [
                     'q' => 'How can salons collect customer feedback?',
-                    'a' => 'Salons and spas can share a QR code or link at checkout, or after an appointment, so customers can rate their experience while it is still fresh.',
+                    'a' => 'Salons and spas can share a QR code or survey link at checkout, or after an appointment, so customers can rate their experience while it is still fresh.',
                 ],
                 [
                     'q' => 'Is my customers\' data kept private?',
-                    'a' => 'Yes. Customer contact details are encrypted in storage, and only authorized members of your business can access your feedback data.',
+                    'a' => 'Yes. Customer contact details are encrypted in storage, and only authorized members of your business can access your survey data.',
                 ],
             ],
         ]);
